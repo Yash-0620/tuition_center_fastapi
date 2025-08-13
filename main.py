@@ -178,8 +178,13 @@ def show_tutors(request: Request, session: Session = Depends(get_session)):
 
 @app.get("/tutor/{tutor_id}/students", response_class=HTMLResponse)
 def view_students(tutor_id: int, request: Request, session: Session = Depends(get_session)):
+    tutor = session.get(Tutor, tutor_id)
     students = session.exec(select(Student).where(Student.tutor_id == tutor_id)).all()
-    return templates.TemplateResponse("students.html", {"request": request, "students": students, "tutor_id": tutor_id})
+    return templates.TemplateResponse(
+        "students.html",
+        {"request": request, "students": students, "tutor_id": tutor_id, "tutor_name": tutor.name}
+    )
+
 
 
 @app.get("/tutor/{tutor_id}/add-student", response_class=HTMLResponse)
