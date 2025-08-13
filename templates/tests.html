@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Records - {{ student.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Tests — {{ student.name }}</h3>
+        <a href="/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    <!-- Add Test Form -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Add New Test
+        </div>
+        <div class="card-body">
+            <form method="post" action="/student/{{ student.id }}/tests/add" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Subject</label>
+                    <input type="text" name="subject" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="test_date" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Total Marks</label>
+                    <input type="number" name="total_marks" min="0" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Marks Attained</label>
+                    <input type="number" name="marks_attained" min="0" class="form-control" required>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-success">Add Test</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Test Records Table -->
+    {% if tests %}
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            Test Records
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-bordered table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Subject</th>
+                        <th>Date</th>
+                        <th>Total Marks</th>
+                        <th>Marks Attained</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in tests %}
+                    <tr>
+                        <td>{{ test.subject }}</td>
+                        <td>{{ test.test_date.strftime('%d-%m-%Y') }}</td>
+                        <td>{{ test.total_marks }}</td>
+                        <td>{{ test.marks_attained }}</td>
+                        <td>
+                            {% if test.total_marks > 0 %}
+                                {{ ((test.marks_attained / test.total_marks) * 100) | round(2) }}%
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+        <p class="text-muted">No test records found for this student.</p>
+    {% endif %}
+
+</div>
+</body>
+</html>
