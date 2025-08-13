@@ -13,18 +13,37 @@
                 <label class="form-label">Student Name</label>
                 <input type="text" name="name" class="form-control" required>
             </div>
+
             <div class="mb-3">
                 <label class="form-label">Grade</label>
                 <input type="text" name="grade" class="form-control" required>
             </div>
+
             <div class="mb-3">
                 <label class="form-label">School</label>
                 <input type="text" name="school" class="form-control" required>
             </div>
+
+            <div class="mb-3">
+                <label class="form-label">Syllabus</label>
+                <input type="text" name="syllabus" class="form-control" placeholder="e.g., CBSE, ICSE, State Board">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Focus Subjects</label>
+                <input type="text" name="focus_subjects" class="form-control" placeholder="e.g., Maths, Science">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Subject</label>
+                <input type="text" name="subject" class="form-control" placeholder="Main subject for tuition">
+            </div>
+
             <div class="mb-3">
                 <label class="form-label">Remarks (optional)</label>
                 <textarea name="remarks" class="form-control" rows="3"></textarea>
             </div>
+
             <div class="text-center">
                 <button type="submit" class="btn btn-success">Add Student</button>
                 <a href="/tutor/{{ tutor_id }}/students" class="btn btn-secondary ms-2">Back to Student List</a>

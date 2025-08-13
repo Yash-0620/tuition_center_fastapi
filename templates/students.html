@@ -21,8 +21,11 @@
                     <th>Name</th>
                     <th>Grade</th>
                     <th>School</th>
+                    <th>Syllabus</th>
+                    <th>Focus Subjects</th>
+                    <th>Subject</th>
                     <th>Remarks</th>
-                    <th style="min-width: 220px;">Attendance</th>
+                    <th style="min-width: 250px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -31,25 +34,18 @@
                     <td>{{ student.name }}</td>
                     <td>{{ student.grade }}</td>
                     <td>{{ student.school }}</td>
-                    <td>{{ student.remarks }}</td>
+                    <td>{{ student.syllabus or '-' }}</td>
+                    <td>{{ student.focus_subjects or '-' }}</td>
+                    <td>{{ student.subject or '-' }}</td>
+                    <td>{{ student.remarks or '-' }}</td>
                     <td>
-                        <a href="/student/{{ student.id }}/attendance" class="btn btn-outline-primary btn-sm me-2">Mark</a>
-                        <a href="/student/{{ student.id }}/attendance-view" class="btn btn-outline-info btn-sm">View</a>
-                        <a href="/student/{{ student.id }}/journal" class="btn btn-sm btn-outline-secondary">Journal</a>
+                        <a href="/student/{{ student.id }}/attendance" class="btn btn-outline-primary btn-sm me-1">Mark Attendance</a>
+                        <a href="/student/{{ student.id }}/attendance-view" class="btn btn-outline-info btn-sm me-1">View Attendance</a>
+                        <a href="/student/{{ student.id }}/journal" class="btn btn-sm btn-outline-secondary me-1">Journal</a>
+                        <a href="/student/{{ student.id }}/tests" class="btn btn-sm btn-warning me-1">View Tests</a>
+                        <a href="/student/{{ student.id }}/edit" class="btn btn-sm btn-outline-dark">Edit</a>
                     </td>
                 </tr>
-                {% for student in students %}
-<tr>
-    <td>{{ student.name }}</td>
-    <td>{{ student.grade }}</td>
-    <td>{{ student.school }}</td>
-    <td>
-        <a href="/student/{{ student.id }}/attendance-view" class="btn btn-sm btn-primary">View Attendance</a>
-        <a href="/student/{{ student.id }}/tests" class="btn btn-sm btn-warning">View Tests</a>
-    </td>
-</tr>
-{% endfor %}
-
                 {% endfor %}
             </tbody>
         </table>

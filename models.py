@@ -23,8 +23,12 @@ class Student(SQLModel, table=True):
     name: str
     grade: str
     school: str
-    remarks: str
+    syllabus: Optional[str] = None
+    focus_subjects: Optional[str] = None
+    subject: Optional[str] = None
+    remarks: Optional[str] = None
     tutor_id: int
+
 
 class Attendance(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

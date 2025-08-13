@@ -178,8 +178,7 @@ def show_tutors(request: Request, session: Session = Depends(get_session)):
 
 @app.get("/tutor/{tutor_id}/students", response_class=HTMLResponse)
 def view_students(tutor_id: int, request: Request, session: Session = Depends(get_session)):
-    students = session.exec(select(Student).where(Student.tutor_id == tutor.id if False else Student.tutor_id == tutor_id)).all()
-    # the above condition simply ensures we use Student.tutor_id == tutor_id
+    students = session.exec(select(Student).where(Student.tutor_id == tutor_id)).all()
     return templates.TemplateResponse("students.html", {"request": request, "students": students, "tutor_id": tutor_id})
 
 
@@ -189,13 +188,79 @@ def add_student_form(tutor_id: int, request: Request):
 
 
 @app.post("/tutor/{tutor_id}/add-student")
-def add_student(tutor_id: int, name: str = Form(...), grade: str = Form(...),
-                school: str = Form(...), remarks: str = Form(""),
-                session: Session = Depends(get_session)):
-    student = Student(name=name, grade=grade, school=school, remarks=remarks, tutor_id=tutor_id)
+def add_student(
+    tutor_id: int,
+    name: str = Form(...),
+    grade: str = Form(...),
+    school: str = Form(...),
+    syllabus: str = Form(None),
+    focus_subjects: str = Form(None),
+    subject: str = Form(None),
+    remarks: str = Form(""),
+    session: Session = Depends(get_session)
+):
+    student = Student(
+        name=name,
+        grade=grade,
+        school=school,
+        syllabus=syllabus,
+        focus_subjects=focus_subjects,
+        subject=subject,
+        remarks=remarks,
+        tutor_id=tutor_id
+    )
     session.add(student)
     session.commit()
     return RedirectResponse(f"/tutor/{tutor_id}/students", status_code=303)
+
+
+
+# ---------- Edit Student ----------
+@app.get("/student/{student_id}/edit", response_class=HTMLResponse)
+def edit_student_form(student_id: int, request: Request, session: Session = Depends(get_session)):
+    student = session.get(Student, student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return templates.TemplateResponse("edit_student.html", {"request": request, "student": student})
+
+
+# ---------------- Edit Student ----------------
+@app.get("/student/{student_id}/edit", response_class=HTMLResponse)
+def edit_student_form(student_id: int, request: Request, session: Session = Depends(get_session)):
+    student = session.get(Student, student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return templates.TemplateResponse("edit_student.html", {"request": request, "student": student})
+
+
+@app.post("/student/{student_id}/edit")
+def edit_student(student_id: int,
+                 name: str = Form(...),
+                 grade: str = Form(...),
+                 school: str = Form(...),
+                 syllabus: str = Form(""),
+                 focus_subjects: str = Form(""),
+                 subject: str = Form(""),
+                 remarks: str = Form(""),
+                 session: Session = Depends(get_session)):
+    student = session.get(Student, student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    student.name = name
+    student.grade = grade
+    student.school = school
+    student.syllabus = syllabus
+    student.focus_subjects = focus_subjects
+    student.subject = subject
+    student.remarks = remarks
+
+    session.add(student)
+    session.commit()
+
+    return RedirectResponse(url=f"/tutor/{student.tutor_id}/students", status_code=303)
+
+
 
 
 # ---------------- Journal ----------------
