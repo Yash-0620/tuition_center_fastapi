@@ -1,5 +1,5 @@
 from __future__ import annotations
-import os, requests
+import os
 from datetime import date, timedelta
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
