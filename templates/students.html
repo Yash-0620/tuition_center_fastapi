@@ -7,13 +7,7 @@
 <body class="bg-light">
 <div class="container mt-5">
     <div class="card p-4 shadow-lg">
-        <h2 class="mb-4">
-    Students Under
-    <a href="/tutor/{{ tutor_id }}/edit" class="text-decoration-none">
-        {{ tutor_name }}
-    </a>
-</h2>
-
+        <h2 class="mb-4">Students Under Tutor</h2>
 
         <div class="mb-3">
             <a href="/tutor/{{ tutor_id }}/add-student" class="btn btn-success">+ Add Student</a>
@@ -21,7 +15,7 @@
         </div>
 
         {% if students %}
-        <table class="table table-striped table-hover align-middle">
+        <table class="table table-striped table-hover">
             <thead class="table-dark">
                 <tr>
                     <th>Name</th>
@@ -45,19 +39,11 @@
                     <td>{{ student.subject or '-' }}</td>
                     <td>{{ student.remarks or '-' }}</td>
                     <td>
-                        <div class="d-flex flex-column gap-2">
-                            <!-- Row 1: Attendance -->
-                            <div class="btn-group" role="group">
-                                <a href="/student/{{ student.id }}/attendance" class="btn btn-outline-primary btn-sm">Mark</a>
-                                <a href="/student/{{ student.id }}/attendance-view" class="btn btn-outline-info btn-sm">View</a>
-                            </div>
-                            <!-- Row 2: Other Actions -->
-                            <div class="btn-group" role="group">
-                                <a href="/student/{{ student.id }}/journal" class="btn btn-outline-secondary btn-sm">Journal</a>
-                                <a href="/student/{{ student.id }}/tests" class="btn btn-warning btn-sm">Tests</a>
-                                <a href="/student/{{ student.id }}/edit" class="btn btn-outline-dark btn-sm">Edit</a>
-                            </div>
-                        </div>
+                        <a href="/student/{{ student.id }}/attendance" class="btn btn-outline-primary btn-sm me-1">Mark Attendance</a>
+                        <a href="/student/{{ student.id }}/attendance-view" class="btn btn-outline-info btn-sm me-1">View Attendance</a>
+                        <a href="/student/{{ student.id }}/journal" class="btn btn-sm btn-outline-secondary me-1">Journal</a>
+                        <a href="/student/{{ student.id }}/tests" class="btn btn-sm btn-warning me-1">View Tests</a>
+                        <a href="/student/{{ student.id }}/edit" class="btn btn-sm btn-outline-dark">Edit</a>
                     </td>
                 </tr>
                 {% endfor %}
