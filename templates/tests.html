@@ -3,86 +3,111 @@
 <head>
     <title>Test Records - {{ student.name }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body class="bg-light">
 <div class="container mt-4">
 
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>Tests — {{ student.name }}</h3>
-        <a href="/dashboard" class="btn btn-secondary">Back to Dashboard</a>
-    </div>
-
-    <!-- Add Test Form -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            Add New Test
-        </div>
-        <div class="card-body">
-            <form method="post" action="/student/{{ student.id }}/tests/add" class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">Subject</label>
-                    <input type="text" name="subject" class="form-control" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Date</label>
-                    <input type="date" name="test_date" class="form-control" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Total Marks</label>
-                    <input type="number" name="total_marks" min="0" class="form-control" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Marks Attained</label>
-                    <input type="number" name="marks_attained" min="0" class="form-control" required>
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-success">Add Test</button>
-                </div>
-            </form>
+        <h3>Test Records — {{ student.name }}</h3>
+        <div>
+            <a href="/dashboard" class="btn btn-secondary me-2">Back to Dashboard</a>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTestModal">
+                + Add Test Record
+            </button>
         </div>
     </div>
 
     <!-- Test Records Table -->
     {% if tests %}
-    <div class="card">
-        <div class="card-header bg-info text-white">
-            Test Records
-        </div>
-        <div class="card-body p-0">
-            <table class="table table-bordered table-striped mb-0">
-                <thead class="table-light">
+        <table class="table table-bordered table-striped">
+            <thead class="table-light">
+                <tr>
+                    <th>Subject</th>
+                    <th>Topic</th>
+                    <th>Date</th>
+                    <th>Total Marks</th>
+                    <th>Marks Attained</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for test in tests %}
                     <tr>
-                        <th>Subject</th>
-                        <th>Date</th>
-                        <th>Total Marks</th>
-                        <th>Marks Attained</th>
-                        <th>Percentage</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for test in tests %}
-                    <tr>
-                        <td>{{ test.subject }}</td>
-                        <td>{{ test.test_date.strftime('%d-%m-%Y') }}</td>
-                        <td>{{ test.total_marks }}</td>
-                        <td>{{ test.marks_attained }}</td>
+                        <td>{{ test.test_date }}</td>
+  <td>{{ test.subject }}</td>
+  <td>{{ test.topic }}</td>
+  <td>{{ test.total_marks }}</td>
+  <td>{{ test.marks_attained }}</td>
+                        <td>{{ test.remarks }}</td>
                         <td>
-                            {% if test.total_marks > 0 %}
-                                {{ ((test.marks_attained / test.total_marks) * 100) | round(2) }}%
+                            {% if test.marks_attained / test.total_marks >= 0.75 %}
+                                <span class="badge bg-success">{{ test.marks_attained }}</span>
+                            {% elif test.marks_attained / test.total_marks >= 0.5 %}
+                                <span class="badge bg-warning text-dark">{{ test.marks_attained }}</span>
                             {% else %}
-                                N/A
+                                <span class="badge bg-danger">{{ test.marks_attained }}</span>
                             {% endif %}
                         </td>
                     </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+                {% endfor %}
+            </tbody>
+        </table>
     {% else %}
         <p class="text-muted">No test records found for this student.</p>
     {% endif %}
 
 </div>
+
+<!-- Add Test Record Modal -->
+<div class="modal fade" id="addTestModal" tabindex="-1" aria-labelledby="addTestModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="/student/{{ student.id }}/tests/add">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addTestModalLabel">Add Test Record</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <div class="mb-3">
+            <label class="form-label">Subject</label>
+            <input type="text" name="subject" class="form-control" required>
+          </div>
+
+            <div class="mb-3">
+            <label class="form-label">Topic</label>
+            <input type="text" name="topic" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Test Date</label>
+            <input type="date" name="test_date" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Total Marks</label>
+            <input type="number" name="total_marks" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Marks Attained</label>
+            <input type="number" name="marks_attained" class="form-control" required>
+          </div>
+            <div class="mb-3">
+            <label class="form-label">Remarks</label>
+            <input type="text" name="remarks" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Test</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

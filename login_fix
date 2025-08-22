@@ -1,0 +1,19 @@
+import sqlite3
+
+db_path = "your_database_name.db"  # change if needed
+conn = sqlite3.connect(db_path)
+
+try:
+    conn.execute("ALTER TABLE user ADD COLUMN email TEXT")
+except sqlite3.OperationalError:
+    print("Column email already exists")
+
+try:
+    conn.execute("ALTER TABLE user ADD COLUMN phone TEXT")
+except sqlite3.OperationalError:
+    print("Column phone already exists")
+
+conn.commit()
+conn.close()
+
+print("Migration complete ✅")

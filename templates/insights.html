@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Insights - {{ student.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #e3f2fd, #ffffff);
+        }
+        .header-card {
+            background: linear-gradient(135deg, #0d6efd, #20c997);
+            color: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+        }
+        .btn-custom {
+            border-radius: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5 animate__animated animate__fadeIn">
+
+    <!-- Header -->
+    <div class="header-card">
+        <h2>📖 Learning Insights</h2>
+        <h4>{{ student.name }} <span class="badge bg-light text-dark">{{ period|capitalize }}</span></h4>
+    </div>
+
+    <!-- Period Navigation -->
+    <div class="d-flex justify-content-center gap-3 mb-4">
+        <a href="/insights/student/{{ student.id }}/daily" class="btn btn-sm btn-outline-primary btn-custom {% if period == 'daily' %}active{% endif %}">Daily</a>
+        <a href="/insights/student/{{ student.id }}/weekly" class="btn btn-sm btn-outline-success btn-custom {% if period == 'weekly' %}active{% endif %}">Weekly</a>
+        <a href="/insights/student/{{ student.id }}/monthly" class="btn btn-sm btn-outline-info btn-custom {% if period == 'monthly' %}active{% endif %}">Monthly</a>
+        <a href="/dashboard" class="btn btn-sm btn-dark btn-custom">⬅ Back</a>
+    </div>
+
+    <!-- Summary & AI Feedback -->
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h4 class="text-primary"><i class="fa-solid fa-list-check me-2"></i> Rule-Based Summary</h4>
+                <p class="mt-2">{{ rule_based_summary or "No summary available." }}</p>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+    <h4>🤖 AI Feedback</h4>
+    <p id="ai-feedback">
+        <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+        Loading feedback...
+    </p>
+</div>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const aiBox = document.getElementById("ai-feedback");
+    const studentId = "{{ student.id }}";
+    const period = "{{ period }}";
+
+    fetch(`/insights/student/${studentId}/${period}/ai`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.ai_feedback) {
+                aiBox.innerText = data.ai_feedback;
+            } else {
+                aiBox.innerText = "(AI feedback not available)";
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            aiBox.innerText = "(AI feedback unavailable)";
+        });
+});
+</script>
+
+</body>
+</html>

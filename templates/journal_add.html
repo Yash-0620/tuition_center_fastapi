@@ -1,35 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Add Journal for {{ student.name }}</title>
+    <title>Add Journal</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 <div class="container mt-4">
-    <h2>Add Journal for {{ student.name }}</h2>
-    <form method="post" action="/student/{{ student.id }}/journal/add" class="mb-4">
-
+    <h2>Add Journal Entry for {{ student.name }}</h2>
+    <form method="post">
         <div class="mb-3">
-            <label class="form-label">Date</label>
-            <input type="date" name="entry_date" class="form-control" value="{{ today }}" required>
+            <label for="entry_date" class="form-label">Date</label>
+            <input type="date" id="entry_date" name="entry_date" class="form-control" value="{{ today }}" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Subject</label>
-            <input type="text" name="subject" class="form-control" required>
+    <label for="turtor_name" class="form-label">Tutor</label>
+    <textarea id="turtor_name" name="tutor_name" class="form-control" rows="4" required></textarea>
+</div>
+
+        <div class="mb-3">
+            <label for="subject" class="form-label">Subject</label>
+            <input type="text" id="subject" name="subject" class="form-control" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Topic / Journal</label>
-            <textarea name="topic" class="form-control" rows="2" required></textarea>
+    <label for="journal" class="form-label">Journal/Dairy</label>
+    <textarea id="journal" name="journal" class="form-control" rows="4" required></textarea>
+</div>
+
+<div class="mb-3">
+            <label for="remarks" class="form-label">Remarks</label>
+            <input type="text" id="remarks" name="remarks" class="form-control" required>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Remarks</label>
-            <textarea name="remarks" class="form-control" rows="2"></textarea>
-        </div>
 
-        <button type="submit" class="btn btn-primary">Save Entry</button>
+        <button type="submit" class="btn btn-primary">Save Journal</button>
         <a href="/student/{{ student.id }}/journal" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
