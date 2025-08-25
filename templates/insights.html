@@ -7,6 +7,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -16,78 +17,396 @@
             background: linear-gradient(135deg, #0d6efd, #20c997);
             color: white;
             border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 30px;
+            padding: 15px;
+            margin-bottom: 25px;
             text-align: center;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
         .card {
+            border: none;
             border-radius: 15px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
         }
-        .btn-custom {
-            border-radius: 50px;
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+        }
+        .fa-refresh {
+            transition: transform 0.6s;
+        }
+        .fa-refresh.spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .btn-refresh {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #495057;
+        }
+        .btn-refresh:hover {
+            background-color: #e2e6ea;
+        }
+        .btn-group-top-left {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+        }
+        .btn-group-top-right {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 35vh;
+            width: 100%;
+        }
+        .pie-chart-container {
+            position: relative;
+            height: 250px;
+            width: 250px;
+            margin: auto;
+        }
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
 
-<div class="container mt-5 animate__animated animate__fadeIn">
+<div class="container py-4">
 
-    <!-- Header -->
-    <div class="header-card">
-        <h2>📖 Learning Insights</h2>
-        <h4>{{ student.name }} <span class="badge bg-light text-dark">{{ period|capitalize }}</span></h4>
+    <div class="header-card animate__animated animate__fadeInDown">
+        <h2>{{ student.name }}</h2>
+        <p class="lead">Academic Insights</p>
+
+        <div class="btn-group-top-right">
+        <a href="/dashboard" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back
+        </a>
+    </div>
+    <div class="btn-group-top-left">
+        <a href="/student/{{ student.id }}/journal" class="btn btn-info">
+            <i class="fas fa-book-open me-2"></i>Go to Journal
+        </a>
     </div>
 
-    <!-- Period Navigation -->
-    <div class="d-flex justify-content-center gap-3 mb-4">
-        <a href="/insights/student/{{ student.id }}/daily" class="btn btn-sm btn-outline-primary btn-custom {% if period == 'daily' %}active{% endif %}">Daily</a>
-        <a href="/insights/student/{{ student.id }}/weekly" class="btn btn-sm btn-outline-success btn-custom {% if period == 'weekly' %}active{% endif %}">Weekly</a>
-        <a href="/insights/student/{{ student.id }}/monthly" class="btn btn-sm btn-outline-info btn-custom {% if period == 'monthly' %}active{% endif %}">Monthly</a>
-        <a href="/dashboard" class="btn btn-sm btn-dark btn-custom">⬅ Back</a>
     </div>
 
-    <!-- Summary & AI Feedback -->
-    <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card p-3">
-                <h4 class="text-primary"><i class="fa-solid fa-list-check me-2"></i> Rule-Based Summary</h4>
-                <p class="mt-2">{{ rule_based_summary or "No summary available." }}</p>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card animate__animated animate__fadeInLeft">
+                <div class="card-header">Recent Test Scores</div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="testScoresChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="col-md-6">
-    <h4>🤖 AI Feedback</h4>
-    <p id="ai-feedback">
-        <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
-        Loading feedback...
-    </p>
-</div>
+        <div class="col-md-4 d-flex justify-content-center">
+            <div class="card animate__animated animate__fadeInRight">
+                <div class="card-header">Attendance Summary</div>
+                <div class="card-body">
+                    <div class="pie-chart-container">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <div class="card animate__animated animate__fadeInUp">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            AI-Generated Feedback
+            <div>
+                <label for="periodSelect" class="form-label mb-0 me-2">Period:</label>
+                <select class="form-select form-select-sm d-inline-block w-auto" id="periodSelect">
+                    <option value="weekly">Weekly</option>
+                    <option value="last-30-days">Last 30 Days</option>
+                    <option value="last-6-months">Last 6 Months</option>
+                </select>
+                <button id="refresh-button" class="btn btn-refresh btn-sm">
+                    <i class="fas fa-sync-alt me-1 refresh-icon"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+        <div class="card-body" id="ai-feedback-container">
+            <div class="loading-spinner">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const aiBox = document.getElementById("ai-feedback");
-    const studentId = "{{ student.id }}";
-    const period = "{{ period }}";
+    document.addEventListener('DOMContentLoaded', function () {
+        const studentId = "{{ student.id }}";
+        const aiContainer = document.getElementById('ai-feedback-container');
+        const periodSelect = document.getElementById('periodSelect');
+        const refreshButton = document.getElementById('refresh-button');
+        const refreshIcon = refreshButton.querySelector('.refresh-icon');
 
-    fetch(`/insights/student/${studentId}/${period}/ai`)
-        .then(res => res.json())
-        .then(data => {
-            if (data.ai_feedback) {
-                aiBox.innerText = data.ai_feedback;
-            } else {
-                aiBox.innerText = "(AI feedback not available)";
+        let isLoading = false;
+        let currentPeriod = periodSelect.value;
+        let aiFeedbackCache = {};
+
+        let testChart = null;
+        let attendanceChart = null;
+
+        // Function to fetch all data and update UI
+        async function fetchAllData(refresh = false) {
+            if (isLoading) return;
+            isLoading = true;
+            aiContainer.innerHTML = `<div class="loading-spinner">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>`;
+            refreshButton.disabled = true;
+            refreshIcon.classList.add('fa-spin');
+
+            try {
+                // 1. Fetch AI Feedback
+                let feedbackUrl = `/insights/student/${studentId}/${currentPeriod}/ai`;
+                if (refresh) {
+                    feedbackUrl = `/insights/student/${studentId}/${currentPeriod}/ai/refresh`;
+                }
+
+                const feedbackResponse = await fetch(feedbackUrl, { method: 'POST' });
+                const feedbackData = await feedbackResponse.json();
+
+                // 2. Fetch data for charts
+                const chartDataResponse = await fetch(`/insights/student/${studentId}/${currentPeriod}/data`);
+                const chartData = await chartDataResponse.json();
+
+                // Render charts
+                renderCharts(chartData);
+
+                // Render AI feedback
+                if (feedbackData.ai_feedback) {
+                    aiFeedbackCache[currentPeriod] = JSON.parse(feedbackData.ai_feedback);
+                    renderFeedback('overall_summary');
+                } else {
+                    aiContainer.innerHTML = `<div class="alert alert-info text-center" role="alert">
+                                                No data available for this period.
+                                            </div>`;
+                }
+            } catch (error) {
+                console.error("Fetch error:", error);
+                aiContainer.innerHTML = `<div class="alert alert-danger text-center" role="alert">
+                                            <i class="fas fa-times-circle me-2"></i>
+                                            Failed to load insights. Please try again.
+                                        </div>`;
+            } finally {
+                isLoading = false;
+                refreshButton.disabled = false;
+                refreshIcon.classList.remove('fa-spin');
             }
-        })
-        .catch(err => {
-            console.error(err);
-            aiBox.innerText = "(AI feedback unavailable)";
+        }
+
+        function renderCharts(data) {
+            // Test Scores Chart
+            if (testChart) testChart.destroy();
+
+            const tests = data.tests.sort((a, b) => new Date(a.date) - new Date(b.date));
+            const testLabels = tests.map(t => `${t.subject} (${new Date(t.date).toLocaleDateString()})`);
+            const testScores = tests.map(t => (t.marks_attained / t.total_marks) * 100);
+
+            const testCtx = document.getElementById('testScoresChart').getContext('2d');
+            testChart = new Chart(testCtx, {
+                type: 'bar',
+                data: {
+                    labels: testLabels,
+                    datasets: [{
+                        label: 'Score (%)',
+                        data: testScores,
+                        backgroundColor: '#0d6efd',
+                        borderColor: '#0d6efd',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Score (%)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Attendance Pie Chart
+            if (attendanceChart) attendanceChart.destroy();
+            const attendanceCounts = data.attendance;
+            const attendanceLabels = Object.keys(attendanceCounts);
+            const attendanceData = Object.values(attendanceCounts);
+
+            const attendanceColors = {
+                'present': '#28a745',
+                'absent': '#dc3545',
+                'late': '#ffc107',
+                'excused': '#6c757d'
+            };
+            const backgroundColors = attendanceLabels.map(label => attendanceColors[label] || '#0d6efd');
+
+            const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+            attendanceChart = new Chart(attendanceCtx, {
+                type: 'pie',
+                data: {
+                    labels: attendanceLabels,
+                    datasets: [{
+                        data: attendanceData,
+                        backgroundColor: backgroundColors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed) {
+                                        label += context.parsed;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderFeedback(subject) {
+            const parsedFeedback = aiFeedbackCache[currentPeriod];
+            if (!parsedFeedback) {
+                return;
+            }
+
+            let strengthsHtml = '';
+            let weaknessesHtml = '';
+            let suggestionsHtml = '';
+
+            if (subject in parsedFeedback && subject !== 'overall_summary') {
+                const subjectData = parsedFeedback[subject];
+                strengthsHtml = subjectData.strengths ? `
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-success"><i class="fas fa-thumbs-up me-2"></i>Strengths</h5>
+                                <ul class="list-group list-group-flush">
+                                    ${subjectData.strengths.map(s => `<li class="list-group-item border-0 px-0">${s}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>` : '';
+                weaknessesHtml = subjectData.weaknesses ? `
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Weaknesses</h5>
+                                <ul class="list-group list-group-flush">
+                                    ${subjectData.weaknesses.map(w => `<li class="list-group-item border-0 px-0">${w}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>` : '';
+                suggestionsHtml = subjectData.suggestions ? `
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-info"><i class="fas fa-lightbulb me-2"></i>Suggestions</h5>
+                                <ul class="list-group list-group-flush">
+                                    ${subjectData.suggestions.map(s => `<li class="list-group-item border-0 px-0">${s}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>` : '';
+            }
+
+            const overallSummaryHtml = parsedFeedback.overall_summary ? `
+                <div class="col-12">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary"><i class="fas fa-chart-line me-2"></i>Overall Summary</h5>
+                            <p class="card-text">${parsedFeedback.overall_summary}</p>
+                        </div>
+                    </div>
+                </div>` : '';
+
+            aiContainer.innerHTML = `
+                ${Object.keys(parsedFeedback).length > 1 ? `
+                <div class="mb-3">
+                    <label for="subjectSelect" class="form-label">Select Subject</label>
+                    <select class="form-select" id="subjectSelect">
+                        ${Object.keys(parsedFeedback).map(sub => `<option value="${sub}" ${sub === subject ? 'selected' : ''}>${sub}</option>`).join('')}
+                    </select>
+                </div>` : ''}
+                <div class="row">
+                    ${strengthsHtml}
+                    ${weaknessesHtml}
+                    ${suggestionsHtml}
+                    ${overallSummaryHtml}
+                </div>
+            `;
+
+            const subjectSelect = document.getElementById('subjectSelect');
+            if (subjectSelect) {
+                subjectSelect.addEventListener('change', (event) => {
+                    renderFeedback(event.target.value);
+                });
+            }
+        }
+
+        fetchAllData();
+
+        refreshButton.addEventListener('click', () => {
+            fetchAllData(true);
         });
-});
+
+        periodSelect.addEventListener('change', (event) => {
+            currentPeriod = event.target.value;
+            fetchAllData();
+        });
+    });
 </script>
 
 </body>

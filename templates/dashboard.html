@@ -5,84 +5,228 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
             --primary-color: #6C63FF;
+            --primary-light: #837dff;
+            --primary-dark: #554fd8;
             --secondary-color: #8E7CFF;
-            --text-color: #333;
-            --light-bg: #F0F2F5;
-            --card-bg: #fff;
-            --border-color: #ddd;
+            --text-color: #2D3748;
+            --text-light: #718096;
+            --light-bg: #F7FAFC;
+            --card-bg: #ffffff;
+            --border-color: #E2E8F0;
+            --success-color: #48BB78;
+            --warning-color: #ECC94B;
+            --danger-color: #F56565;
+            --info-color: #4299E1;
+            --sidebar-width: 260px;
+        }
+
+        .dark-mode {
+            --primary-color: #8E7CFF;
+            --primary-light: #a59dff;
+            --primary-dark: #6C63FF;
+            --secondary-color: #9c8cff;
+            --text-color: #E2E8F0;
+            --text-light: #A0AEC0;
+            --light-bg: #1A202C;
+            --card-bg: #2D3748;
+            --border-color: #4A5568;
+            --success-color: #68D391;
+            --warning-color: #F6E05E;
+            --danger-color: #FC8181;
+            --info-color: #63B3ED;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
             font-family: 'Poppins', sans-serif;
             background-color: var(--light-bg);
             color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+            transition: all 0.3s ease;
         }
 
-        .container-fluid {
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1.5rem 1rem;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 0 0.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-nav {
+            margin-top: 2rem;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
             padding: 2rem;
+            transition: all 0.3s ease;
         }
 
+        /* Header */
         .header-section {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
+            padding: 1rem 1.5rem;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
         }
 
-        .header-section h2 {
+        .welcome-text h2 {
             font-weight: 600;
-            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
         }
 
-        .btn-action {
-            background-color: var(--primary-color);
-            border: none;
-            padding: 0.5rem 1.5rem;
-            font-weight: 600;
-            border-radius: 0.5rem;
-            transition: background-color 0.3s ease;
+        .welcome-text p {
+            color: var(--text-light);
+            margin-bottom: 0;
         }
 
-        .btn-action:hover {
-            background-color: var(--secondary-color);
+        .header-actions .btn {
+            margin-left: 0.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 0.5rem 1.25rem;
         }
 
-        .btn-logout {
-            background-color: #dc3545;
-            border: none;
-            padding: 0.5rem 1.5rem;
-            font-weight: 600;
-            border-radius: 0.5rem;
-            transition: background-color 0.3s ease;
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
-        .btn-logout:hover {
-            background-color: #c82333;
-        }
-
-        .card {
-            border: none;
-            border-radius: 1rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 4px solid var(--primary-color);
         }
 
-        .card:hover {
+        .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .card-body h3, .card-body h6 {
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .stat-content h3 {
+            font-size: 1.75rem;
             font-weight: 600;
+            margin-bottom: 0.25rem;
         }
 
-        .card-body h3 {
-            margin-top: 0.5rem;
+        .stat-content p {
+            color: var(--text-light);
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        /* Content Sections */
+        .content-section {
+            margin-bottom: 2rem;
         }
 
         .section-header {
@@ -90,161 +234,545 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1.5rem;
-            padding-top: 1rem;
         }
 
-        .section-header h4 {
+        .section-title {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-input {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            width: 100%;
+            max-width: 300px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+            background-color: var(--card-bg);
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem;
             font-weight: 600;
         }
 
-        .list-group-item {
-            border: none;
-            border-bottom: 1px solid var(--border-color);
-            padding: 1.25rem 1.5rem;
+        .card-body {
+            padding: 1.5rem;
         }
 
-        .list-group-item:last-child {
-            border-bottom: none;
+        /* List Items */
+        .list-group-item {
+            border-color: var(--border-color);
+            transition: all 0.3s ease;
+            padding: 1.25rem;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .list-group-item:hover {
+            background-color: rgba(108, 99, 255, 0.08);
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.8rem;
         }
 
         .badge {
             font-weight: 500;
+            padding: 0.35em 0.65em;
+            border-radius: 6px;
         }
 
-        .list-group-item:hover {
-            background-color: #f8f9fa;
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+                padding: 1rem 0.5rem;
+            }
+
+            .sidebar-brand span, .nav-link span {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 80px;
+            }
+
+            .sidebar-header {
+                padding: 0 0.25rem 1rem;
+            }
+
+            .nav-link {
+                justify-content: center;
+                padding: 0.75rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .header-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .header-actions {
+                align-self: stretch;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .header-actions .btn {
+                margin-left: 0;
+                margin-bottom: 0.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="container-fluid">
-    <div class="header-section">
-        <h2>Welcome, <span class="text-primary">{{ username }}</span></h2>
-        <div>
-            <a href="/attendance" class="btn btn-warning me-2 text-white">Mark Attendance</a>
-            <a href="/logout" class="btn btn-danger">Logout</a>
+<!-- Theme Toggle Button -->
+<div class="theme-toggle" id="themeToggle">
+    <i class="fas fa-moon"></i>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-brand">
+            <i class="fas fa-graduation-cap"></i>
+            <span>EduTrack</span>
         </div>
     </div>
 
-    <div class="row mb-4 g-4">
-        <div class="col-md-3">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h6 class="text-muted">Total Tutors</h6>
-                    <h3 class="text-primary">{{ tutors|length }}</h3>
-                </div>
+    <nav class="sidebar-nav">
+        <div class="nav-item">
+            <a href="#" class="nav-link active">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="/attendance" class="nav-link">
+                <i class="fas fa-calendar-check"></i>
+                <span>Attendance</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="/upcoming-tests" class="nav-link">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Tests</span>
+            </a>
+        </div>
+        {% if user_type == 'admin' %}
+        <div class="nav-item">
+            <a href="/add-tutor" class="nav-link">
+                <i class="fas fa-chalkboard-teacher"></i>
+                <span>Manage Tutors</span>
+            </a>
+        </div>
+        {% endif %}
+        <div class="nav-item">
+            <a href="/reports" class="nav-link">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="/logout" class="nav-link">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </nav>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+    <div class="header-section animate-fadeIn">
+        <div class="welcome-text">
+            <h2>Welcome, <span class="text-primary">{{ username }}</span></h2>
+            <p>Here's your dashboard overview</p>
+        </div>
+        <div class="header-actions">
+            <a href="/attendance" class="btn btn-warning"><i class="fas fa-calendar-plus me-1"></i> Mark Attendance</a>
+            <a href="/upcoming-tests" class="btn btn-info text-white"><i class="fas fa-clipboard-list me-1"></i> Upcoming Tests</a>
+            <a href="/logout" class="btn btn-danger"><i class="fas fa-sign-out-alt me-1"></i> Logout</a>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+        {% if user_type == 'admin' %}
+        <div class="stat-card animate-fadeIn delay-1">
+            <div class="stat-icon" style="background-color: rgba(108, 99, 255, 0.1); color: var(--primary-color);">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ tutors|length }}</h3>
+                <p>Total Tutors</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="stat-card animate-fadeIn delay-2">
+            <div class="stat-icon" style="background-color: rgba(72, 187, 120, 0.1); color: var(--success-color);">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ students|length }}</h3>
+                <p>Total Students</p>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h6 class="text-muted">Total Students</h6>
-                    <h3 class="text-success">{{ students|length }}</h3>
-                </div>
+        <div class="stat-card animate-fadeIn delay-3">
+            <div class="stat-icon" style="background-color: rgba(236, 201, 75, 0.1); color: var(--warning-color);">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ presents_today }}</h3>
+                <p>Presents Today</p>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h6 class="text-success">✅ Presents Today</h6>
-                    <h3 class="fw-bold text-success">{{ presents_today }}</h3>
-                </div>
+        <div class="stat-card animate-fadeIn delay-4">
+            <div class="stat-icon" style="background-color: rgba(245, 101, 101, 0.1); color: var(--danger-color);">
+                <i class="fas fa-user-times"></i>
             </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h6 class="text-danger">❌ Absents Today</h6>
-                    <h3 class="fw-bold text-danger">{{ absents_today }}</h3>
-                </div>
+            <div class="stat-content">
+                <h3>{{ absents_today }}</h3>
+                <p>Absents Today</p>
             </div>
         </div>
     </div>
 
     <div class="row g-4">
-        <div class="col-md-6">
-            <div class="section-header">
-                <h4>📚 Tutors</h4>
-                <a href="/add-tutor" class="btn btn-action text-white">➕ Add Tutor</a>
-            </div>
-            <div class="card">
-                <ul class="list-group list-group-flush">
-                    {% if tutors %}
+        {% if user_type == "admin" %}
+        <div class="col-lg-6 col-md-12">
+            <div class="content-section">
+                <div class="section-header">
+                    <h4 class="section-title">Your Tutors</h4>
+                    <a href="/add-tutor" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i> Add Tutor</a>
+                </div>
+
+                <div class="filter-bar">
+                    <input type="text" class="filter-input" placeholder="Search tutors..." id="tutorSearch">
+                    <select class="filter-select" id="tutorFilter">
+                        <option value="all">All Subjects</option>
                         {% for tutor in tutors %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ tutor.name }}</strong>
-                                    <span class="badge bg-primary">{{ tutor.subject }}</span>
-                                    <div class="small text-muted">{{ tutor.phone }}</div>
-                                    <div class="mt-2">
-                                        <a href="/tutor/{{ tutor.id }}/add-student" class="btn btn-sm btn-success">Add Student</a>
-                                        <a href="/tutor/{{ tutor.id }}/students" class="btn btn-sm btn-outline-primary">View Students</a>
-                                    </div>
-                                </div>
-                                <div>
-                                    <a href="/tutor/{{ tutor.id }}/edit" class="text-primary me-2" title="Edit Tutor">✏️</a>
-                                    <form action="/tutor/{{ tutor.id }}/delete" method="post" style="display:inline;">
-                                        <button type="submit" class="btn btn-link text-danger p-0 m-0"
-                                                onclick="return confirm('Delete this tutor and all students under them?')"
-                                                title="Delete Tutor">🗑️</button>
-                                    </form>
-                                </div>
-                            </li>
+                        <option value="{{ tutor.subject }}">{{ tutor.subject }}</option>
                         {% endfor %}
-                    {% else %}
-                        <li class="list-group-item text-center text-muted py-5">No tutors added yet.</li>
-                    {% endif %}
-                </ul>
+                    </select>
+                </div>
+
+                <div class="card">
+                    <ul class="list-group list-group-flush" id="tutorList">
+                        {% if tutors %}
+                            {% for tutor in tutors %}
+                                <li class="list-group-item" data-subject="{{ tutor.subject }}">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="mb-1 text-primary">{{ tutor.name }}</h5>
+                                            <p class="mb-1 text-muted">{{ tutor.subject }}</p>
+                                        </div>
+                                        <div class="d-flex">
+                                            <a href="/tutor/{{ tutor.id }}/students" class="btn btn-sm btn-outline-primary me-1" title="View Students"><i class="fas fa-users"></i></a>
+                                            <a href="/tutor/{{ tutor.id }}/edit" class="btn btn-sm btn-outline-secondary me-1" title="Edit"><i class="fas fa-edit"></i></a>
+                                            <form action="/tutor/{{ tutor.id }}/delete" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this tutor and all their associated students and records?')" title="Delete"><i class="fas fa-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item text-center text-muted py-5">No tutors found.</li>
+                        {% endif %}
+                    </ul>
+                </div>
             </div>
         </div>
+        {% endif %}
 
-        <div class="col-md-6">
-            <div class="section-header">
-                <h4>👨‍🎓 Students</h4>
-            </div>
-            <div class="card">
-                <ul class="list-group list-group-flush">
-                    {% if students %}
+        <div class="col-lg-6 col-md-12">
+            <div class="content-section">
+                <div class="section-header">
+                    <h4 class="section-title">Your Students</h4>
+                </div>
+
+                <div class="filter-bar">
+                    <input type="text" class="filter-input" placeholder="Search students..." id="studentSearch">
+                    <select class="filter-select" id="gradeFilter">
+                        <option value="all">All Grades</option>
                         {% for student in students %}
-                            <li class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <strong>{{ student.name }}</strong>
-                                        <span class="badge bg-secondary">Grade {{ student.grade }}</span>
-                                        <div class="small text-muted">{{ student.school }}</div>
-                                        {% if student.remarks %}
-                                            <small class="text-muted">Remarks: {{ student.remarks }}</small>
-                                        {% endif %}
-                                    </div>
-                                    <div>
-                                        <a href="/student/{{ student.id }}/edit" class="text-primary me-2" title="Edit Student">✏️</a>
-                                        <form action="/student/{{ student.id }}/delete" method="post" style="display:inline;">
-                                            <button type="submit" class="btn btn-link text-danger p-0 m-0"
-                                                    onclick="return confirm('Delete this student?')"
-                                                    title="Delete Student">🗑️</button>
-                                        </form>
-                                    </div>
-                                </div>
-                                <div class="mt-3 d-flex flex-wrap">
-                                    <a href="/student/{{ student.id }}/journal" class="btn btn-sm btn-outline-primary me-1 mb-1">📒 Journal</a>
-                                    <a href="/student/{{ student.id }}/journal/add" class="btn btn-sm btn-outline-success me-1 mb-1">➕ Add Journal</a>
-                                    <a href="/student/{{ student.id }}/attendance-view" class="btn btn-sm btn-outline-warning me-1 mb-1">📅 Attendance</a>
-                                    <a href="/student/{{ student.id }}/tests" class="btn btn-sm btn-info me-1 mb-1">📊 Tests</a>
-                                    <a href="/insights/student/{{ student.id }}/weekly" class="btn btn-sm btn-info mb-1">🔎 Insights</a>
-                                </div>
-                            </li>
+                        <option value="{{ student.grade }}">Grade {{ student.grade }}</option>
                         {% endfor %}
-                    {% else %}
-                        <li class="list-group-item text-center text-muted py-5">No students found.</li>
-                    {% endif %}
-                </ul>
+                    </select>
+                </div>
+
+                <div class="card">
+                    <ul class="list-group list-group-flush" id="studentList">
+                        {% if students %}
+                            {% for student in students %}
+                                <li class="list-group-item" data-grade="{{ student.grade }}">
+                                    <div class="d-flex w-100 justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <h5 class="mb-1 text-primary">{{ student.name }}</h5>
+                                            <p class="mb-1 text-muted">Grade: {{ student.grade }}</p>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <a href="/student/{{ student.id }}/edit" class="btn btn-sm btn-outline-secondary me-1" title="Edit Student"><i class="fas fa-edit"></i></a>
+                                            <form action="/student/{{ student.id }}/delete" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                        onclick="return confirm('Delete this student?')"
+                                                        title="Delete Student"><i class="fas fa-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <a href="/student/{{ student.id }}/journal" class="btn btn-sm btn-outline-primary"><i class="fas fa-book me-1"></i>Journal</a>
+                                        <a href="/student/{{ student.id }}/journal/add" class="btn btn-sm btn-outline-success"><i class="fas fa-plus me-1"></i>Add Journal</a>
+                                        <a href="/student/{{ student.id }}/attendance-view" class="btn btn-sm btn-outline-warning"><i class="fas fa-calendar me-1"></i>Attendance</a>
+                                        <a href="/student/{{ student.id }}/tests" class="btn btn-sm btn-outline-info"><i class="fas fa-chart-bar me-1"></i>Tests</a>
+                                        <a href="/student/{{ student.id }}/insights" class="btn btn-sm btn-outline-dark"><i class="fas fa-chart-pie me-1"></i>Insights</a>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item text-center text-muted py-5">No students found.</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-2">
+        <div class="col-lg-6 col-md-12">
+            <div class="content-section">
+                <div class="section-header">
+                    <h4 class="section-title">Upcoming Tests</h4>
+                    <a href="/upcoming-tests" class="btn btn-sm btn-outline-secondary">View All</a>
+                </div>
+                <div class="card">
+                    <ul class="list-group list-group-flush">
+                        {% if upcoming_tests %}
+                            {% for upcoming_test, student in upcoming_tests %}
+                                <li class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <div>
+                                            <h5 class="mb-1 text-primary">{{ upcoming_test.subject }} - {{ upcoming_test.topics }}</h5>
+                                            <p class="mb-1 text-muted"><i class="fas fa-calendar me-1"></i>{{ upcoming_test.test_date.strftime('%d %B, %Y') }}</p>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-light text-dark"><i class="fas fa-user me-1"></i>{{ student.name }}</span>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item text-center text-muted py-5">No upcoming tests.</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 col-md-12">
+            <div class="content-section">
+                <div class="section-header">
+                    <h4 class="section-title">Recent Test Records</h4>
+                    <a href="/all_tests" class="btn btn-sm btn-outline-secondary">View All</a>
+                </div>
+                <div class="card">
+                    <ul class="list-group list-group-flush">
+                        {% if record_tests %}
+                            {% for test, student in record_tests %}
+                                <li class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="mb-1 text-primary">{{ test.subject }} - {{ test.topic }}</h5>
+                                            <p class="mb-1 text-muted"><i class="fas fa-calendar me-1"></i>{{ test.test_date.strftime('%d %B, %Y') }}</p>
+                                            <p class="mb-0"><i class="fas fa-user me-1"></i>{{ student.name }}</p>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-success">{{ test.marks_attained }} / {{ test.total_marks }}</span>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item text-center text-muted py-5">No recent test records.</li>
+                        {% endif %}
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Theme toggle functionality
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = themeToggle.querySelector('i');
+
+    // Check for saved theme preference or respect OS preference
+    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const currentTheme = localStorage.getItem('theme');
+
+    if (currentTheme === 'dark' || (!currentTheme && prefersDarkScheme.matches)) {
+        document.body.classList.add('dark-mode');
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+    }
+
+    themeToggle.addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+
+        if (document.body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeIcon.classList.remove('fa-sun');
+            themeIcon.classList.add('fa-moon');
+        }
+    });
+
+    // Filter functionality for tutors and students
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tutor filtering
+        const tutorSearch = document.getElementById('tutorSearch');
+        const tutorFilter = document.getElementById('tutorFilter');
+        const tutorList = document.getElementById('tutorList');
+        const tutors = tutorList.getElementsByClassName('list-group-item');
+
+        if (tutorSearch && tutorFilter) {
+            tutorSearch.addEventListener('input', filterTutors);
+            tutorFilter.addEventListener('change', filterTutors);
+        }
+
+        function filterTutors() {
+            const searchText = tutorSearch.value.toLowerCase();
+            const subjectValue = tutorFilter.value;
+
+            Array.from(tutors).forEach(function(tutor) {
+                const tutorName = tutor.querySelector('h5').textContent.toLowerCase();
+                const tutorSubject = tutor.getAttribute('data-subject');
+                const matchesSearch = tutorName.includes(searchText);
+                const matchesSubject = subjectValue === 'all' || tutorSubject === subjectValue;
+
+                if (matchesSearch && matchesSubject) {
+                    tutor.style.display = 'block';
+                } else {
+                    tutor.style.display = 'none';
+                }
+            });
+        }
+
+        // Student filtering
+        const studentSearch = document.getElementById('studentSearch');
+        const gradeFilter = document.getElementById('gradeFilter');
+        const studentList = document.getElementById('studentList');
+        const students = studentList.getElementsByClassName('list-group-item');
+
+        if (studentSearch && gradeFilter) {
+            studentSearch.addEventListener('input', filterStudents);
+            gradeFilter.addEventListener('change', filterStudents);
+        }
+
+        function filterStudents() {
+            const searchText = studentSearch.value.toLowerCase();
+            const gradeValue = gradeFilter.value;
+
+            Array.from(students).forEach(function(student) {
+                const studentName = student.querySelector('h5').textContent.toLowerCase();
+                const studentGrade = student.getAttribute('data-grade');
+                const matchesSearch = studentName.includes(searchText);
+                const matchesGrade = gradeValue === 'all' || studentGrade === gradeValue;
+
+                if (matchesSearch && matchesGrade) {
+                    student.style.display = 'block';
+                } else {
+                    student.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+
 </body>
 </html>
