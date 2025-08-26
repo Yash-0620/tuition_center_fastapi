@@ -34,7 +34,7 @@ dependencies = [
 "uvicorn==0.33.0",
 "watchfiles==0.24.0",
 "websockets==13.1",
-"psycopg2-binary>=2.9",
+"psycopg-binary",
 "alembic~=1.14.1",
 "requests~=2.32.4"
 ]
