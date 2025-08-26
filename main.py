@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from datetime import date, timedelta, datetime
-from fastapi import Body, Query, FastAPI, Request, Depends, Form, HTTPException
+from fastapi import Body, Query, FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import func
@@ -40,10 +40,6 @@ app.mount(
 templates = Jinja2Templates(directory="templates")
 app.state.templates = templates
 
-# Initialize DB (only once!)
-init_db()
-SQLModel.metadata.create_all(engine)
-
 # Pass templates to subrouter & include AI Feedback router
 init_templates(templates)
 app.include_router(ai_feedback_router)
@@ -68,27 +64,37 @@ def get_current_user(request: Request, session: Session = Depends(get_session)) 
 
 
 # ---------------- Auth / Index ----------------
+# Ensure you have 'from passlib.context import CryptContext' and the helper functions defined.
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+from passlib.context import CryptContext
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verifies a plain password against a hashed one."""
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password: str) -> str:
+    """Hashes a password using bcrypt."""
+    return pwd_context.hash(password)
+
+# GET route to display the signup form
 @app.get("/signup", response_class=HTMLResponse)
-def signup_page(request: Request):
-    username = request.cookies.get("username")
-    if username:
-        return RedirectResponse("/dashboard", status_code=303)
+def get_signup_form(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
 
-
+# POST route to handle signup form submission
 @app.post("/signup")
 def signup(
-        request: Request,
-        username: str = Form(...),
-        email: str = Form(...),
-        phone: str = Form(...),
-        password: str = Form(...),
-        session: Session = Depends(get_session)
+    request: Request,
+    username: str = Form(...),
+    email: str = Form(...),
+    phone: str = Form(...),
+    password: str = Form(...),
+    session: Session = Depends(get_session)
 ):
     existing_user = session.exec(
         select(User).where((User.username == username) | (User.email == email))
@@ -101,40 +107,39 @@ def signup(
                 "error": "Username or email already exists. Please choose another."
             }
         )
-
-    user = User(username=username, email=email, phone=phone, password=password, user_type="admin")
+    hashed_password = get_password_hash(password)
+    user = User(
+        username=username,
+        email=email,
+        phone=phone,
+        password=hashed_password,
+        user_type="admin"
+    )
     session.add(user)
     session.commit()
-
     resp = RedirectResponse(url="/dashboard", status_code=303)
     resp.set_cookie("username", username)
     return resp
 
-
+# GET route to display the login form
 @app.get("/login", response_class=HTMLResponse)
-def login_page(request: Request):
-    username = request.cookies.get("username")
-    if username:
-        return RedirectResponse("/dashboard", status_code=303)
+def get_login_form(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
-
+# POST route to handle login form submission
 @app.post("/login")
 def login(
-        request: Request,
-        username_email: str = Form(...),
-        password: str = Form(...),
-        session: Session = Depends(get_session)
+    request: Request,
+    username_email: str = Form(...),
+    password: str = Form(...),
+    session: Session = Depends(get_session)
 ):
     user = session.exec(
         select(User).where(
-            ((User.username == username_email) |
-             ((User.email != None) & (User.email == username_email))),
-            User.password == password
+            (User.username == username_email) | (User.email == username_email)
         )
     ).first()
-
-    if user:
+    if user and verify_password(password, user.password):
         resp = RedirectResponse(url="/dashboard", status_code=303)
         resp.set_cookie("username", user.username)
         return resp
@@ -150,10 +155,6 @@ def logout():
     resp = RedirectResponse(url="/login", status_code=303)
     resp.delete_cookie("username")
     return resp
-
-@app.route('/diagnostics')
-def diagnostics():
-    return render_template('diagnostics.html')
 
 
 @app.get("/attendance-today-count")
