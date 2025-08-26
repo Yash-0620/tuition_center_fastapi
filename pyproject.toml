@@ -36,8 +36,7 @@ dependencies = [
 "websockets==13.1",
 "psycopg2-binary>=2.9",
 "alembic~=1.14.1",
-"requests~=2.32.4",
-"reportlab~=4.4.3"
+"requests~=2.32.4"
 ]
 license-files = []
 
