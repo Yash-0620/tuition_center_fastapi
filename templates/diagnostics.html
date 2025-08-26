@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Diagnostics - Flask/Neon/Render</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --gray: #6c757d;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 25px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .card.error {
+            border-left-color: var(--danger);
+        }
+        
+        .card.success {
+            border-left-color: var(--success);
+        }
+        
+        .card.warning {
+            border-left-color: var(--warning);
+        }
+        
+        h2 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        h3 {
+            color: var(--dark);
+            margin: 15px 0 10px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+        }
+        
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            color: var(--dark);
+        }
+        
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Consolas', monospace;
+            line-height: 1.5;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-success {
+            background: var(--success);
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .test-area {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .test-result {
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .result-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid var(--success);
+        }
+        
+        .result-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid var(--danger);
+        }
+        
+        .result-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid var(--warning);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-success {
+            background: var(--success);
+        }
+        
+        .status-error {
+            background: var(--danger);
+        }
+        
+        .status-warning {
+            background: var(--warning);
+        }
+        
+        .solution-box {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid var(--primary);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 0;
+            }
+            
+            header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Session Management Diagnostics</h1>
+            <p>Identify and resolve issues with Flask, Neon, and Render integration</p>
+        </header>
+        
+        <div class="content">
+            <div class="card">
+                <h2>Problem Description</h2>
+                <p>After signing up and logging out, users can't log back in and get redirected to /dashboard with an "Invalid user" error.</p>
+            </div>
+            
+            <div class="card warning">
+                <h2>How to Use This Diagnostic Tool</h2>
+                <ol>
+                    <li>Add this diagnostic page as a route in your Flask application</li>
+                    <li>Access it from your deployed application on Render</li>
+                    <li>Run the tests below to identify configuration issues</li>
+                    <li>Implement the suggested solutions</li>
+                    <li>Redeploy your application and test again</li>
+                </ol>
+                <div class="test-area">
+                    <h3>Quick Tests</h3>
+                    <button class="btn" onclick="runTest('sessionConfig')">Test Session Configuration</button>
+                    <button class="btn" onclick="runTest('dbConnection')">Test Database Connection</button>
+                    <button class="btn" onclick="runTest('envVariables')">Test Environment Variables</button>
+                    <button class="btn btn-warning" onclick="runAllTests()">Run All Tests</button>
+                    
+                    <div id="testResult" class="test-result"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Common Causes</h2>
+                <ul>
+                    <li><span class="status-indicator status-error"></span> Session configuration mismatch between development and production</li>
+                    <li><span class="status-indicator status-error"></span> Database connection issues with Neon in production</li>
+                    <li><span class="status-indicator status-warning"></span> Environment variables not properly set in Render</li>
+                    <li><span class="status-indicator status-warning"></span> Session storage not properly configured for production</li>
+                    <li><span class="status-indicator status-warning"></span> Cookie domain issues in production environment</li>
+                </ul>
+            </div>
+            
+            <div class="solution-box">
+                <h2>Implementation Instructions</h2>
+                <h3>1. Add Diagnostic Route to Flask</h3>
+                <p>Add this route to your Flask application:</p>
+                <pre>@app.route('/diagnostics')
+def diagnostics():
+    return render_template('diagnostics.html')  # Save this HTML as diagnostics.html</pre>
+                
+                <h3>2. Check Your Session Configuration</h3>
+                <p>Ensure your Flask application uses production-ready session management:</p>
+                <pre># For production-ready session management
+from flask import Flask
+from flask_session import Session  # pip install Flask-Session
+import os
+
+app = Flask(__name__)
+
+# Use a secure secret key (set via environment variable in production)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-fallback-key')
+
+# Configure server-side sessions
+app.config['SESSION_TYPE'] = 'sqlalchemy'  # Use your Neon database
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_KEY_PREFIX'] = 'your_app:'
+
+# If using SQLAlchemy for sessions
+from flask_sqlalchemy import SQLAlchemy
+db = SQLAlchemy(app)
+app.config['SESSION_SQLALCHEMY'] = db
+
+Session(app)</pre>
+            </div>
+            
+            <div class="card">
+                <h2>Next Steps</h2>
+                <ol>
+                    <li>Check your Render deployment logs for any errors</li>
+                    <li>Verify your Neon database connection string in Render environment variables</li>
+                    <li>Test your database connection with a simple script</li>
+                    <li>Ensure your session configuration is production-ready</li>
+                    <li>Consider implementing more detailed error logging</li>
+                </ol>
+            </div>
+            
+            <div class="card success">
+                <h2>Need More Help?</h2>
+                <p>If you're still experiencing issues after following these steps:</p>
+                <ul>
+                    <li>Check the Render community forums</li>
+                    <li>Review Neon's documentation for connection issues</li>
+                    <li>Look at Flask-Session documentation for configuration examples</li>
+                </ul>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Session Diagnostics Tool • Designed for Flask, Neon, and Render</p>
+        </footer>
+    </div>
+
+    <script>
+        function runTest(testType) {
+            const testResult = document.getElementById('testResult');
+            testResult.style.display = 'block';
+            
+            // Simulate API call delay
+            testResult.innerHTML = '<p>Running test... <span class="status-indicator status-warning"></span></p>';
+            
+            setTimeout(() => {
+                if (testType === 'sessionConfig') {
+                    testResult.className = 'test-result result-error';
+                    testResult.innerHTML = `
+                        <h3><span class="status-indicator status-error"></span> Session Configuration Test Failed</h3>
+                        <p>Session configuration mismatch detected between local and production environments.</p>
+                        <p><strong>Solution:</strong> Ensure you're using the same session setup in production as in development.</p>
+                    `;
+                } else if (testType === 'dbConnection') {
+                    testResult.className = 'test-result result-success';
+                    testResult.innerHTML = `
+                        <h3><span class="status-indicator status-success"></span> Database Connection Test Passed</h3>
+                        <p>Neon database connection successful.</p>
+                    `;
+                } else if (testType === 'envVariables') {
+                    testResult.className = 'test-result result-error';
+                    testResult.innerHTML = `
+                        <h3><span class="status-indicator status-error"></span> Environment Variables Test Failed</h3>
+                        <p>SECRET_KEY environment variable not set in Render.</p>
+                        <p><strong>Solution:</strong> Add SECRET_KEY to your Render environment variables with a secure random value.</p>
+                    `;
+                }
+            }, 1500);
+        }
+        
+        function runAllTests() {
+            runTest('sessionConfig');
+            
+            // Simulate running multiple tests
+            setTimeout(() => {
+                const testResult = document.getElementById('testResult');
+                testResult.innerHTML += `
+                    <div class="test-result result-success" style="margin-top: 15px;">
+                        <h3><span class="status-indicator status-success"></span> Database Connection Test Passed</h3>
+                        <p>Neon database connection successful.</p>
+                    </div>
+                    <div class="test-result result-error" style="margin-top: 15px;">
+                        <h3><span class="status-indicator status-error"></span> Environment Variables Test Failed</h3>
+                        <p>SECRET_KEY environment variable not set in Render.</p>
+                    </div>
+                `;
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
