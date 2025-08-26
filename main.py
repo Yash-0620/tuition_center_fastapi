@@ -66,10 +66,6 @@ def get_current_user(request: Request, session: Session = Depends(get_session)) 
 
     return user
 
-@app.route('/diagnostics')
-def diagnostics():
-    return render_template('diagnostics.html')
-
 
 # ---------------- Auth / Index ----------------
 @app.get("/", response_class=HTMLResponse)
@@ -154,6 +150,10 @@ def logout():
     resp = RedirectResponse(url="/login", status_code=303)
     resp.delete_cookie("username")
     return resp
+
+@app.route('/diagnostics')
+def diagnostics():
+    return render_template('diagnostics.html')
 
 
 @app.get("/attendance-today-count")
