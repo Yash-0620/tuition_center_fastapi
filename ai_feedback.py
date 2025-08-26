@@ -1,29 +1,57 @@
 from __future__ import annotations
 import os
+import json
+import requests
 from datetime import date, timedelta
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlmodel import Session, select
 from starlette.templating import Jinja2Templates
-
-from models import Student, Journal, Attendance, TestRecord
+from collections import defaultdict
+from models import Student, Journal, Attendance, TestRecord, Feedback
 from db import get_session
 
 router = APIRouter(prefix="/insights", tags=["Insights"])
 
 # -------- Templates wiring (set from main.py) --------
 _templates: Jinja2Templates | None = None
+
+
 def init_templates(templates: Jinja2Templates) -> None:
     global _templates
     _templates = templates
 
-# Hugging Face setup
-HF_API_KEY = os.getenv("OPENAI_API_KEY")
-HF_MODEL = "google/flan-t5-base"
+
+# Gemini API setup (using direct HTTP requests)
+GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
 
 # ---------------- Context ----------------
+def get_start_end_dates(period: str) -> tuple[date, date]:
+    """
+    Calculates the start and end dates based on a given period.
+    """
+    today = date.today()
+    if period == "weekly":
+        # Start of the week (Monday)
+        start_date = today - timedelta(days=today.weekday())
+        end_date = start_date + timedelta(days=6)
+    elif period == "last-30-days":
+        end_date = today
+        start_date = today - timedelta(days=30)
+    elif period == "last-6-months":
+        end_date = today
+        start_date = today - timedelta(days=6 * 30)  # Approx 6 months
+    else:
+        raise HTTPException(status_code=400, detail="Invalid period specified.")
+    return start_date, end_date
+
+
 def collect_student_context(session: Session, student_id: int, start_date: date, end_date: date):
+    """
+    Collects student's academic data within a given date range.
+    """
     journals = session.exec(
         select(Journal).where(
             Journal.student_id == student_id,
@@ -48,127 +76,246 @@ def collect_student_context(session: Session, student_id: int, start_date: date,
         )
     ).all()
 
-    return {"journals": journals, "tests": tests, "attendance": attendance}
+    context = {
+        "journals": journals,
+        "tests": tests,
+        "attendance": attendance
+    }
+    return context
 
 
-# ---------------- Rule-Based Summary ----------------
-def rule_based_summary(journals, tests, attendance):
-    summary = []
-    if not journals and not tests and not attendance:
-        return "No activity recorded in this period."
+def format_data_for_ai(context: dict) -> str:
+    """
+    Formats the collected data into a structured string for the AI model.
+    """
+    prompt_parts = []
 
-    if journals:
-        summary.append(f"📝 {len(journals)} journal entries recorded.")
-        remarks = [j.remarks for j in journals if j.remarks]
-        if remarks:
-            summary.append("Remarks: " + "; ".join(remarks))
+    if context["journals"]:
+        prompt_parts.append("Journal Entries:")
+        for j in context["journals"]:
+            prompt_parts.append(
+                f"- Date: {j.entry_date}, Subject: {j.subject}, Journal: {j.journal}, Remarks: {j.remarks}"
+            )
+        prompt_parts.append("\n")
 
-    if tests:
-        scores = [t.marks_attained for t in tests if t.marks_attained is not None]
-        if scores:
-            avg = sum(scores) / len(scores)
-            summary.append(f"📊 {len(scores)} tests taken, avg score {avg:.1f}/{tests[0].total_marks}.")
+    if context["tests"]:
+        prompt_parts.append("Test Records:")
+        for t in context["tests"]:
+            prompt_parts.append(
+                f"- Date: {t.test_date}, Subject: {t.subject}, Topic: {t.topic}, Marks: {t.marks_attained}/{t.total_marks}, Remarks: {t.remarks}"
+            )
+        prompt_parts.append("\n")
 
-    if attendance:
-        present_days = sum(1 for a in attendance if a.status.lower() == "present")
-        summary.append(f"📅 Attendance: {present_days}/{len(attendance)} days present.")
+    if context["attendance"]:
+        prompt_parts.append("Attendance Records:")
+        attendance_summary = defaultdict(int)
+        for a in context["attendance"]:
+            attendance_summary[a.status.lower()] += 1
 
-    return " ".join(summary)
+        prompt_parts.append(f"  - Total Present: {attendance_summary['present']}")
+        prompt_parts.append(f"  - Total Absent: {attendance_summary['absent']}")
+        prompt_parts.append(f"  - Total Late: {attendance_summary['late']}")
+        prompt_parts.append("\n")
+
+    return "\n".join(prompt_parts)
 
 
-# ---------------- Hugging Face AI ----------------
-def call_ai(context: dict) -> str:
-    url = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
-    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
-
-    # Serialize context into readable format
-    journals = "\n".join([f"- {j.entry_date}: {j.journal} (Remarks: {j.remarks or 'None'})" for j in context["journals"]])
-    tests = "\n".join([f"- {t.test_date}: {t.marks_attained}/{t.total_marks}" for t in context["tests"]])
-    attendance = "\n".join([f"- {a.attendance_date}: {a.status}" for a in context["attendance"]])
+def call_gemini_api(summary_for_ai: str):
+    """
+    Calls the Gemini API to get feedback based on the provided data.
+    """
+    if not GEMINI_API_KEY:
+        return {"error": "API key not set."}
 
     prompt = f"""
-Analyze the student's academic performance and provide a detailed evaluation.
+    Based on the following student data, generate a detailed academic insight report. 
+    The report should be a single JSON object with the following keys:
+    1.  'overall_summary': A brief paragraph summarizing the student's overall performance.
+    2.  For each subject mentioned, create a separate key (e.g., 'Mathematics', 'Science'). Each subject key should contain:
+        - 'strengths': A list of key strengths.
+        - 'weaknesses': A list of key weaknesses or areas for improvement.
+        - 'suggestions': A list of actionable suggestions for improvement.
 
-📘 Journals & Tutor Notes:
-{journals or 'No journals recorded'}
+    Here is the student data:
+    {summary_for_ai}
+    """
 
-📊 Test Results:
-{tests or 'No tests available'}
+    headers = {
+        "Content-Type": "application/json"
+    }
 
-📅 Attendance:
-{attendance or 'No attendance recorded'}
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt}
+                ]
+            }
+        ],
+        "generationConfig": {
+            "responseMimeType": "application/json"
+        }
+    }
 
-Return the analysis with these sections:
-- Strengths
-- Weaknesses
-- Advice
-- Overall Trend
-"""
+    try:
+        response = requests.post(
+            f"{GEMINI_API_URL}?key={GEMINI_API_KEY}",
+            headers=headers,
+            json=payload
+        )
+        response.raise_for_status()
 
-    payload = {"inputs": prompt}
-    response = requests.post(url, headers=headers, json=payload)
+        feedback_data = response.json()
 
-    if response.status_code != 200:
-        return f"(HF Error {response.status_code}) {response.text}"
+        # Extract the JSON string from the response
+        generated_json_string = feedback_data["candidates"][0]["content"]["parts"][0]["text"]
 
-    result = response.json()
-    print("🔍 HF Raw Response:", result)  # 👈 debug log
+        # Parse the string into a Python object
+        parsed_data = json.loads(generated_json_string)
+        return parsed_data
 
-    # Extract text safely
-    if isinstance(result, list) and "generated_text" in result[0]:
-        return result[0]["generated_text"]
-    if isinstance(result, list) and "summary_text" in result[0]:
-        return result[0]["summary_text"]
-
-    return "(AI feedback unavailable)"
-
-
-
+    except requests.exceptions.HTTPError as err:
+        return {"error": f"HTTP Error: {err}"}
+    except requests.exceptions.RequestException as e:
+        return {"error": f"Request Error: {e}"}
+    except (json.JSONDecodeError, KeyError) as e:
+        return {"error": f"Failed to parse AI response: {e}"}
+    except Exception as e:
+        return {"error": f"An unexpected error occurred: {e}"}
 
 
-# ---------------- Main Insights Page ----------------
-@router.get("/student/{student_id}/{period}", response_class=HTMLResponse)
-def insights_page(request: Request, student_id: int, period: str, session: Session = Depends(get_session)):
-    today = date.today()
-    if period == "daily":
-        start_date, end_date = today, today
-    elif period == "weekly":
-        start_date, end_date = today - timedelta(days=7), today
-    elif period == "monthly":
-        start_date, end_date = today - timedelta(days=30), today
-    else:
-        start_date, end_date = today, today
-
+# ---------------- Endpoints ----------------
+@router.get("/{student_id}", response_class=HTMLResponse)
+def get_insights_page(request: Request, student_id: int, session: Session = Depends(get_session)):
     student = session.get(Student, student_id)
-    context = collect_student_context(session, student_id, start_date, end_date)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found.")
 
-    summary = rule_based_summary(context["journals"], context["tests"], context["attendance"])
-
-    return _templates.TemplateResponse("insights.html", {
-        "request": request,
-        "student": student,
-        "period": period,
-        "rule_based_summary": summary,
-        "ai_feedback": "Loading feedback..."
-    })
+    return _templates.TemplateResponse(
+        "insights.html",
+        {"request": request, "student": student}
+    )
 
 
-# ---------------- Separate AI Endpoint ----------------
-@router.get("/student/{student_id}/{period}/ai")
-def insights_ai(student_id: int, period: str, session: Session = Depends(get_session)):
-    today = date.today()
-    if period == "daily":
-        start_date, end_date = today, today
-    elif period == "weekly":
-        start_date, end_date = today - timedelta(days=7), today
-    elif period == "monthly":
-        start_date, end_date = today - timedelta(days=30), today
-    else:
-        return {"ai_feedback": "Invalid period"}
+@router.get("/student/{student_id}/{period}/data")
+def get_student_data(student_id: int, period: str, session: Session = Depends(get_session)):
+    try:
+        start_date, end_date = get_start_end_dates(period)
+    except HTTPException as e:
+        return {"error": e.detail}
 
     context = collect_student_context(session, student_id, start_date, end_date)
-    if not context:
-        return {"ai_feedback": "No context available"}
 
-    ai_text = call_ai(context)
-    return {"ai_feedback": ai_text}
+    test_data = [
+        {"subject": t.subject, "date": t.test_date.isoformat(), "marks_attained": t.marks_attained,
+         "total_marks": t.total_marks}
+        for t in context["tests"]
+    ]
+
+    attendance_counts = defaultdict(int)
+    for a in context["attendance"]:
+        attendance_counts[a.status.lower()] += 1
+
+    return {
+        "tests": test_data,
+        "attendance": dict(attendance_counts)
+    }
+
+
+@router.post("/student/{student_id}/{period}/ai")
+def get_insights_ai(student_id: int, period: str, session: Session = Depends(get_session)):
+    try:
+        start_date, end_date = get_start_end_dates(period)
+    except HTTPException as e:
+        return {"ai_feedback": e.detail}
+
+    # Check for existing feedback
+    existing_feedback = session.exec(
+        select(Feedback).where(
+            Feedback.student_id == student_id,
+            Feedback.period == period,
+            Feedback.start_date == start_date,
+            Feedback.end_date == end_date
+        )
+    ).first()
+
+    if existing_feedback:
+        return {"ai_feedback": existing_feedback.feedback_text}
+
+    # If no existing feedback, generate new
+    context = collect_student_context(session, student_id, start_date, end_date)
+    if not context or (not context["journals"] and not context["tests"] and not context["attendance"]):
+        return {"ai_feedback": "No data available for this period."}
+
+    summary_for_ai = format_data_for_ai(context)
+
+    feedback_data = call_gemini_api(summary_for_ai)
+
+    if "error" in feedback_data:
+        return {"ai_feedback": feedback_data["error"]}
+
+    feedback_json_text = json.dumps(feedback_data)
+
+    new_feedback = Feedback(
+        student_id=student_id,
+        period=period,
+        start_date=start_date,
+        end_date=end_date,
+        feedback_text=feedback_json_text
+    )
+
+    session.add(new_feedback)
+    session.commit()
+    session.refresh(new_feedback)
+
+    return {"ai_feedback": new_feedback.feedback_text}
+
+
+@router.post("/student/{student_id}/{period}/ai/refresh")
+def refresh_insights_ai(student_id: int, period: str, session: Session = Depends(get_session)):
+    try:
+        start_date, end_date = get_start_end_dates(period)
+    except HTTPException as e:
+        return {"ai_feedback": e.detail}
+
+    # Delete existing feedback to force a refresh
+    existing_feedback = session.exec(
+        select(Feedback).where(
+            Feedback.student_id == student_id,
+            Feedback.period == period,
+            Feedback.start_date == start_date,
+            Feedback.end_date == end_date
+        )
+    ).first()
+
+    if existing_feedback:
+        session.delete(existing_feedback)
+        session.commit()
+
+    # Generate new feedback and save it
+    context = collect_student_context(session, student_id, start_date, end_date)
+    if not context or (not context["journals"] and not context["tests"] and not context["attendance"]):
+        return {"ai_feedback": "No data available for this period."}
+
+    summary_for_ai = format_data_for_ai(context)
+
+    feedback_data = call_gemini_api(summary_for_ai)
+
+    if "error" in feedback_data:
+        return {"ai_feedback": feedback_data["error"]}
+
+    feedback_json_text = json.dumps(feedback_data)
+
+    new_feedback = Feedback(
+        student_id=student_id,
+        period=period,
+        start_date=start_date,
+        end_date=end_date,
+        feedback_text=feedback_json_text
+    )
+
+    session.add(new_feedback)
+    session.commit()
+    session.refresh(new_feedback)
+
+    return {"ai_feedback": new_feedback.feedback_text}

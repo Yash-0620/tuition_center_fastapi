@@ -5,48 +5,213 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tutor Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
             --primary-color: #6C63FF;
+            --primary-light: #837dff;
+            --primary-dark: #554fd8;
             --secondary-color: #8E7CFF;
-            --text-color: #333;
-            --light-bg: #F0F2F5;
-            --card-bg: #fff;
-            --border-color: #ddd;
+            --text-color: #2D3748;
+            --text-light: #718096;
+            --light-bg: #F7FAFC;
+            --card-bg: #ffffff;
+            --border-color: #E2E8F0;
+            --success-color: #48BB78;
+            --warning-color: #ECC94B;
+            --danger-color: #F56565;
+            --info-color: #4299E1;
         }
 
+        .dark-mode {
+            --primary-color: #8E7CFF;
+            --primary-light: #a59dff;
+            --primary-dark: #6C63FF;
+            --secondary-color: #9c8cff;
+            --text-color: #E2E8F0;
+            --text-light: #A0AEC0;
+            --light-bg: #1A202C;
+            --card-bg: #2D3748;
+            --border-color: #4A5568;
+            --success-color: #68D391;
+            --warning-color: #F6E05E;
+            --danger-color: #FC8181;
+            --info-color: #63B3ED;
+        }
+
+        /* Enhanced Animated Gradient Background */
         body {
+            background: linear-gradient(-45deg, #6C63FF, #FF6B6B, #4ECDC4, #FFE66D, #6C63FF);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
             font-family: 'Poppins', sans-serif;
-            background-color: var(--light-bg);
             color: var(--text-color);
+            transition: all 0.3s ease;
         }
 
+        /* Animated gradient effect */
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Floating shapes animation */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 25%);
+            animation: float 20s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            33% {
+                transform: translateY(-20px) rotate(3deg);
+            }
+            66% {
+                transform: translateY(20px) rotate(-3deg);
+            }
+        }
+
+        /* Subtle particle effect */
+        body::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 90px 40px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 160px 120px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 300px 60px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 250px 180px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 380px 140px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 450px 80px, rgba(255,255,255,0.2), transparent);
+            background-repeat: repeat;
+            background-size: 500px 500px;
+            animation: particles 15s linear infinite;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        @keyframes particles {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 500px 500px;
+            }
+        }
+
+        /* For dark mode compatibility */
+        .dark-mode body {
+            background: linear-gradient(-45deg, #1a202c, #2d3748, #4a5568, #6C63FF, #1a202c);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        .dark-mode body::before {
+            background:
+                radial-gradient(circle at 10% 20%, rgba(0, 0, 0, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 0, 0, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 50% 30%, rgba(0, 0, 0, 0.05) 0%, transparent 25%);
+        }
+
+        .dark-mode body::after {
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, rgba(0,0,0,0.3), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(0,0,0,0.2), transparent),
+                radial-gradient(2px 2px at 90px 40px, rgba(0,0,0,0.3), transparent),
+                radial-gradient(2px 2px at 160px 120px, rgba(0,0,0,0.2), transparent),
+                radial-gradient(2px 2px at 300px 60px, rgba(0,0,0,0.3), transparent),
+                radial-gradient(2px 2px at 250px 180px, rgba(0,0,0,0.2), transparent),
+                radial-gradient(2px 2px at 380px 140px, rgba(0,0,0,0.3), transparent),
+                radial-gradient(2px 2px at 450px 80px, rgba(0,0,0,0.2), transparent);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Container */
         .container-fluid {
             padding: 2rem;
+            position: relative;
+            z-index: 1;
         }
 
+        /* Header */
         .header-section {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
+            padding: 1.5rem;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
         }
 
-        .header-section h1 {
+        .header-title {
             font-weight: 600;
+            font-size: 1.75rem;
             color: var(--primary-color);
+            margin: 0;
         }
 
         .profile-section {
             display: flex;
             align-items: center;
+            gap: 1rem;
         }
 
         .user-greeting {
             font-size: 1.1rem;
-            margin-right: 1rem;
             font-weight: 500;
         }
 
@@ -56,109 +221,259 @@
         }
 
         .btn-logout {
-            background-color: #f44336;
+            background-color: var(--danger-color);
             color: white;
             border: none;
-            border-radius: 5px;
-            padding: 8px 15px;
+            border-radius: 8px;
+            padding: 0.5rem 1.25rem;
             text-decoration: none;
             font-weight: 500;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .btn-logout:hover {
             background-color: #d32f2f;
+            transform: translateY(-2px);
         }
 
+        /* Cards */
         .card {
             border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+            background-color: var(--card-bg);
+            margin-bottom: 1.5rem;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
         }
 
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-weight: 600;
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* List Items */
         .list-group-item {
+            border-color: var(--border-color);
+            transition: all 0.3s ease;
+            padding: 1.25rem;
+            background-color: var(--card-bg);
+            color: var(--text-color);
             border-radius: 10px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 10px;
-            transition: background-color 0.3s ease;
+            margin-bottom: 0.75rem;
         }
 
         .list-group-item:hover {
-            background-color: #f8f9fa;
+            background-color: rgba(108, 99, 255, 0.08);
         }
 
-        .card-header h5 {
-            font-weight: 600;
-        }
-
-        .card-body h6 {
+        .btn {
+            border-radius: 8px;
             font-weight: 500;
-            margin-bottom: 0.5rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .card-body p {
-            font-size: 0.9rem;
-            color: #666;
+        .btn-sm {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        /* Scrollable Container */
+        .scrollable-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 0 1.5rem 1.5rem;
+        }
+
+        /* Custom Scrollbar */
+        .scrollable-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scrollable-container::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 10px;
+        }
+
+        .scrollable-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        .scrollable-container::-webkit-scrollbar-thumb:hover {
+            background: var(--text-light);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding: 1rem;
+            }
+
+            .header-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .profile-section {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: 0.5rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
+
+<!-- Theme Toggle Button -->
+<div class="theme-toggle" id="themeToggle">
+    <i class="fas fa-moon"></i>
+</div>
+
 <div class="container-fluid">
-    <div class="header-section">
-        <h1>Tutor Dashboard</h1>
+    <!-- Header Section -->
+    <div class="header-section animate-fadeIn">
+        <h1 class="header-title">Tutor Dashboard</h1>
         <div class="profile-section">
             <span class="user-greeting">Hello, <span>{{ username }}</span>!</span>
-            <a href="/logout" class="btn btn-logout">Logout</a>
+            <a href="/logout" class="btn btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title m-0">My Students</h5>
-                    <a href="/tutor/{{ tutor.id }}/add-student" class="btn btn-primary">➕ Add New Student</a>
-                </div>
+    <!-- Students Card -->
+    <div class="card animate-fadeIn">
+        <div class="card-header">
+            <h5 class="card-title">My Students</h5>
+            <a href="/tutor/{{ tutor.id }}/add-student" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Add New Student
+            </a>
+        </div>
 
-                <ul class="list-group mt-3">
-                    {% if students %}
-                        {% for student in students %}
-                            <li class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6>{{ student.name }} (Grade {{ student.grade }})</h6>
-                                        <p class="m-0 text-muted">Subject: {{ student.subject }}</p>
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <a href="/student/{{ student.id }}/edit" class="btn btn-sm btn-outline-info me-2">✏️ Edit</a>
-                                        <form method="post" action="/student/{{ student.id }}/delete" style="display:inline;">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger p-0 m-0"
-                                                    onclick="return confirm('Delete this student?')"
-                                                    title="Delete Student">🗑️</button>
-                                        </form>
-                                    </div>
+        <div class="scrollable-container">
+            <ul class="list-group">
+                {% if students %}
+                    {% for student in students %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="mb-1 text-primary">{{ student.name }} (Grade {{ student.grade }})</h6>
+                                    <p class="mb-0 text-muted">Subject: {{ student.subject or '-' }}</p>
                                 </div>
-                                <div class="mt-3 d-flex flex-wrap">
-                                    <a href="/student/{{ student.id }}/journal" class="btn btn-sm btn-outline-primary me-1 mb-1">📒 Journal</a>
-                                    <a href="/student/{{ student.id }}/journal/add" class="btn btn-sm btn-outline-success me-1 mb-1">➕ Add Journal</a>
-                                    <a href="/student/{{ student.id }}/attendance-view" class="btn btn-sm btn-outline-warning me-1 mb-1">📅 Attendance</a>
-                                    <a href="/student/{{ student.id }}/tests" class="btn btn-sm btn-info me-1 mb-1">📊 Tests</a>
+                                <div class="d-flex align-items-center">
+                                    <a href="/student/{{ student.id }}/edit" class="btn btn-sm btn-outline-secondary me-1" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="post" action="/student/{{ student.id }}/delete" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Delete this student?')"
+                                                title="Delete Student">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </div>
-                            </li>
-                        {% endfor %}
-                    {% else %}
-                        <li class="list-group-item text-center text-muted py-5">No students found.</li>
-                    {% endif %}
-                </ul>
-            </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1">
+                                <a href="/student/{{ student.id }}/journal" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-book me-1"></i>Journal
+                                </a>
+                                <a href="/student/{{ student.id }}/journal/add" class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-plus me-1"></i>Add Journal
+                                </a>
+                                <a href="/student/{{ student.id }}/attendance-view" class="btn btn-sm btn-outline-warning">
+                                    <i class="fas fa-calendar me-1"></i>Attendance
+                                </a>
+                                <a href="/student/{{ student.id }}/tests" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-clipboard-list me-1"></i>Tests
+                                </a>
+                            </div>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li class="list-group-item text-center text-muted py-5">
+                        <i class="fas fa-user-graduate display-4 d-block mb-3"></i>
+                        No students found. Add your first student to get started.
+                    </li>
+                {% endif %}
+            </ul>
         </div>
     </div>
 </div>
+
+<script>
+    // Theme toggle functionality
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = themeToggle.querySelector('i');
+
+    // Check for saved theme preference or respect OS preference
+    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const currentTheme = localStorage.getItem('theme');
+
+    if (currentTheme === 'dark' || (!currentTheme && prefersDarkScheme.matches)) {
+        document.body.classList.add('dark-mode');
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+    }
+
+    themeToggle.addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+
+        if (document.body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeIcon.classList.remove('fa-sun');
+            themeIcon.classList.add('fa-moon');
+        }
+    });
+</script>
+
 </body>
 </html>

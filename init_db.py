@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel
-from database import engine  # adjust if your engine import path is different
+from db import engine  # adjust if your engine import path is different
 from models import *  # Import all your models so SQLModel knows them
 
 def init_db():
