@@ -1250,6 +1250,38 @@ def view_tests(
         "tests": tests
     })
 
+# ---------- View All Tests Route ----------
+@app.get("/all_tests", response_class=HTMLResponse)
+def view_all_tests(
+    request: Request,
+    session: Session = Depends(get_session),
+    user: User = Depends(get_current_user)
+):
+    if user.user_type == "admin":
+        tutor_ids = session.exec(select(Tutor.id).where(Tutor.user_id == user.id)).all()
+        student_ids = session.exec(select(Student.id).where(Student.tutor_id.in_(tutor_ids))).all()
+    elif user.user_type == "tutor":
+        student_ids = session.exec(select(Student.id).where(Student.tutor_id == user.tutor_id)).all()
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    tests_with_students = session.exec(
+        select(TestRecord, Student)
+        .join(Student)
+        .where(TestRecord.student_id.in_(student_ids))
+        .order_by(TestRecord.test_date.desc())
+    ).all()
+
+    return no_cache_response(
+        templates.TemplateResponse(
+            "all_tests.html",
+            {
+                "request": request,
+                "tests_with_students": tests_with_students
+            }
+        )
+    )
+
 
 # ---------------- Upcoming Tests ----------------
 @app.get("/upcoming-tests", response_class=HTMLResponse)
