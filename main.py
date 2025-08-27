@@ -18,6 +18,9 @@ from init_db import init_db
 from ai_feedback import router as ai_feedback_router, init_templates
 from fastapi.staticfiles import StaticFiles
 import os
+import secrets
+import string
+from passlib.context import CryptContext
 
 
 # ---------------- Helper to prevent caching ----------------
@@ -81,12 +84,16 @@ def get_password_hash(password: str) -> str:
     """Hashes a password using bcrypt."""
     return pwd_context.hash(password)
 
+def _looks_like_bcrypt(value: str) -> bool:
+    # bcrypt hashes typically start with $2a$, $2b$, or $2y$
+    return isinstance(value, str) and value.startswith("$2")
+
 # GET route to display the signup form
 @app.get("/signup", response_class=HTMLResponse)
 def get_signup_form(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
 
-# POST route to handle signup form submission
+# POST route to handle signup (ALWAYS hash)
 @app.post("/signup")
 def signup(
     request: Request,
@@ -102,11 +109,9 @@ def signup(
     if existing_user:
         return templates.TemplateResponse(
             "signup.html",
-            {
-                "request": request,
-                "error": "Username or email already exists. Please choose another."
-            }
+            {"request": request, "error": "Username or email already exists. Please choose another."}
         )
+
     hashed_password = get_password_hash(password)
     user = User(
         username=username,
@@ -117,16 +122,20 @@ def signup(
     )
     session.add(user)
     session.commit()
+
     resp = RedirectResponse(url="/dashboard", status_code=303)
-    resp.set_cookie("username", username)
+    resp.set_cookie("username", username, httponly=True, samesite="lax")
     return resp
 
 # GET route to display the login form
 @app.get("/login", response_class=HTMLResponse)
-def get_login_form(request: Request):
+def login_page(request: Request):
+    username = request.cookies.get("username")
+    if username:
+        return RedirectResponse("/dashboard", status_code=303)
     return templates.TemplateResponse("login.html", {"request": request})
 
-# POST route to handle login form submission
+# POST route to handle login (bcrypt + fallback for legacy plaintext)
 @app.post("/login")
 def login(
     request: Request,
@@ -139,15 +148,29 @@ def login(
             (User.username == username_email) | (User.email == username_email)
         )
     ).first()
-    if user and verify_password(password, user.password):
-        resp = RedirectResponse(url="/dashboard", status_code=303)
-        resp.set_cookie("username", user.username)
-        return resp
+
+    if not user:
+        return templates.TemplateResponse("login.html", {"request": request, "error": True})
+
+    ok = False
+    if _looks_like_bcrypt(user.password):
+        # Normal flow: compare with bcrypt
+        ok = verify_password(password, user.password)
     else:
-        return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "error": True}
-        )
+        # Legacy plaintext user (e.g., older admin). Allow once, then rehash.
+        if user.password == password:
+            ok = True
+            user.password = get_password_hash(password)
+            session.add(user)
+            session.commit()
+
+    if ok:
+        resp = RedirectResponse(url="/dashboard", status_code=303)
+        resp.set_cookie("username", user.username, httponly=True, samesite="lax")
+        return resp
+
+    return templates.TemplateResponse("login.html", {"request": request, "error": True})
+
 
 
 @app.get("/logout")
@@ -270,6 +293,92 @@ def admin_dashboard(request: Request, session: Session = Depends(get_session), u
     )
 
 
+# ---------- Admin Profile Route ----------
+@app.get("/admin-profile", response_class=HTMLResponse)
+def admin_profile(
+        request: Request,
+        session: Session = Depends(get_session),
+        user: User = Depends(get_current_user)
+):
+    if user.user_type != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    tutors_with_users = session.exec(
+        select(Tutor, User)
+        .join(User, onclause=Tutor.user_id == User.id)
+        .where(Tutor.user_id == user.id)
+    ).all()
+
+    # Get the generated password from the URL, if it exists
+    generated_password = request.query_params.get("tutor_password")
+    generated_name = request.query_params.get("tutor_name")
+
+    return templates.TemplateResponse(
+        "admin_profile.html",
+        {
+            "request": request,
+            "user": user,
+            "tutors_with_users": tutors_with_users,
+            "generated_password": generated_password,
+            "generated_name": generated_name,
+        }
+    )
+
+# ---------- Tutor Credentials Route ----------
+@app.get("/tutor-credentials", response_class=HTMLResponse)
+def tutor_credentials(
+    request: Request,
+    session: Session = Depends(get_session),
+    user: User = Depends(get_current_user)
+):
+    if user.user_type != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    tutors_with_users = session.exec(
+        select(Tutor, User)
+        .join(User, onclause=Tutor.user_id == User.id)
+        .where(Tutor.user_id == user.id)
+    ).all()
+
+    return templates.TemplateResponse(
+        "tutor_credentials.html",
+        {
+            "request": request,
+            "tutors_with_users": tutors_with_users
+        }
+    )
+
+# ---------- Generate and Reset Tutor Password Route ----------
+@app.post("/tutor/{tutor_id}/change-password")
+def generate_new_password_for_tutor(
+    tutor_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+    user: User = Depends(get_current_user)
+):
+    if user.user_type != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    tutor_user = session.exec(select(User).where(User.tutor_id == tutor_id)).first()
+    if not tutor_user:
+        raise HTTPException(status_code=404, detail="Tutor's user account not found")
+
+    # Generate a new random 8-character password
+    characters = string.ascii_letters + string.digits
+    new_password = ''.join(secrets.choice(characters) for i in range(8))
+
+    # Hash the new password and update the user's account
+    tutor_user.password = pwd_context.hash(new_password)
+    session.add(tutor_user)
+    session.commit()
+
+    # Redirect back to the credentials page with the new password
+    return RedirectResponse(
+        url=f"/tutor-credentials?new_password={new_password}&tutor_name={tutor_user.username}",
+        status_code=303
+    )
+
+
 @app.get("/tutor-dashboard", response_class=HTMLResponse)
 def tutor_dashboard(request: Request, session: Session = Depends(get_session), user: User = Depends(get_current_user)):
     if user.user_type != "tutor":
@@ -360,30 +469,46 @@ def add_tutor_form(request: Request, user: User = Depends(get_current_user)):
     return templates.TemplateResponse("add_tutor.html", {"request": request})
 
 
+# ----------------- Add Tutor Route (UPDATED) -----------------
 @app.post("/add-tutor")
 def add_tutor(request: Request, name: str = Form(...), subject: str = Form(...), phone: str = Form(...),
               session: Session = Depends(get_session), user: User = Depends(get_current_user)):
     if user.user_type != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
 
+    # Generate a username from the tutor's name (e.g., John Doe -> john_doe)
+    username = name.strip().replace(" ", "_").lower()
+
+    # Generate a random 8-character password
+    characters = string.ascii_letters + string.digits
+    password = ''.join(secrets.choice(characters) for i in range(8))
+
+    # Hash the password
+    hashed_password = pwd_context.hash(password)
+
     new_tutor = Tutor(name=name, subject=subject, phone=phone, user_id=user.id)
     session.add(new_tutor)
     session.commit()
     session.refresh(new_tutor)
 
-    # Create a new user for the tutor
+    # Create a new user for the tutor with the generated username and hashed password
     tutor_user = User(
-        username=f"tutor_{new_tutor.id}",
+        username=username,
         email=None,
         phone=None,
-        password="password",  # Default password, should be changed
+        password=hashed_password,
         user_type="tutor",
         tutor_id=new_tutor.id
     )
     session.add(tutor_user)
     session.commit()
 
-    return RedirectResponse("/admin-dashboard", status_code=303)
+    # Pass the generated plain-text password to the admin via the URL for a one-time view.
+    # THIS IS NOT SECURE FOR A REAL APP, but fulfills the user's request.
+    return RedirectResponse(
+        url=f"/admin-profile?tutor_name={name}&tutor_password={password}",
+        status_code=303
+    )
 
 
 @app.get("/tutors", response_class=HTMLResponse)
