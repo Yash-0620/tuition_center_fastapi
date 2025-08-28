@@ -258,7 +258,7 @@
 <div class="container">
     <!-- Page Header -->
     <div class="page-header animate-fadeIn">
-        <h1 class="page-title">Students Under Tutor</h1>
+        <h1 class="page-title">Students Under {{ tutor_name }}</h1>
         <div class="action-buttons">
             <a href="/tutor/{{ tutor_id }}/add-student" class="btn btn-success">
                 <i class="fas fa-plus"></i> Add Student
@@ -298,7 +298,7 @@
                             <td>{{ student.subject or '-' }}</td>
                             <td>{{ student.remarks or '-' }}</td>
                             <td class="action-cell">
-                                <a href="/student/{{ student.id }}/attendance" class="btn btn-sm btn-outline-primary" title="Mark Attendance">
+                                <a href="/attendance" class="btn btn-sm btn-outline-primary" title="Mark Attendance">
                                     <i class="fas fa-calendar-check"></i>
                                 </a>
                                 <a href="/student/{{ student.id }}/attendance-view" class="btn btn-sm btn-outline-info" title="View Attendance">
@@ -312,6 +312,9 @@
                                 </a>
                                 <a href="/student/{{ student.id }}/edit" class="btn btn-sm btn-outline-dark" title="Edit">
                                     <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="/student/{{ student.id }}/transfer" class="btn btn-sm btn-success" title="Transfer Student">
+                                    <i class="fas fa-exchange-alt"></i>
                                 </a>
                             </td>
                         </tr>
