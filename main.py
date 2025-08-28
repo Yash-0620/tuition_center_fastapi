@@ -293,6 +293,48 @@ def admin_dashboard(request: Request, session: Session = Depends(get_session), u
     )
 
 
+# ---------- User Profile Route ----------
+@app.get("/user-profile", response_class=HTMLResponse)
+def user_profile(
+        request: Request,
+        session: Session = Depends(get_session),
+        user: User = Depends(get_current_user)
+):
+    # This route is for the currently logged-in user, regardless of type
+    return templates.TemplateResponse(
+        "user_profile.html",
+        {"request": request, "user": user}
+    )
+
+
+@app.post("/user-profile")
+def update_user_profile(
+        request: Request,
+        email: str = Form(...),
+        phone: str = Form(None),
+        new_password: str = Form(None),
+        session: Session = Depends(get_session),
+        user: User = Depends(get_current_user)
+):
+    # Update user details
+    user.email = email
+    user.phone = phone
+
+    # Update password if provided
+    if new_password:
+        user.password = pwd_context.hash(new_password)
+
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    # Add a success message to the response to show on the page
+    return RedirectResponse(
+        url=f"/user-profile?success=true",
+        status_code=303
+    )
+
+
 # ---------- Admin Profile Route ----------
 @app.get("/admin-profile", response_class=HTMLResponse)
 def admin_profile(
@@ -572,6 +614,54 @@ def add_student(
     session.add(student)
     session.commit()
     return RedirectResponse(f"/tutor/{tutor_id}/students", status_code=303)
+
+
+# ---------- Transfer Student Route ----------
+@app.get("/student/{student_id}/transfer", response_class=HTMLResponse)
+def transfer_student_form(
+        student_id: int,
+        request: Request,
+        session: Session = Depends(get_session),
+        user: User = Depends(get_current_user)
+):
+    if user.user_type != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    student = session.get(Student, student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    tutors = session.exec(select(Tutor).where(Tutor.user_id == user.id)).all()
+
+    return templates.TemplateResponse(
+        "transfer_student.html",
+        {
+            "request": request,
+            "student": student,
+            "tutors": tutors
+        }
+    )
+
+
+@app.post("/student/{student_id}/transfer")
+def transfer_student(
+        student_id: int,
+        new_tutor_id: int = Form(...),
+        session: Session = Depends(get_session),
+        user: User = Depends(get_current_user)
+):
+    if user.user_type != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    student = session.get(Student, student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    student.tutor_id = new_tutor_id
+    session.add(student)
+    session.commit()
+
+    return RedirectResponse(url=f"/tutor/{new_tutor_id}/students", status_code=303)
 
 
 # ---------------- Student Report ----------------
@@ -1040,19 +1130,22 @@ def add_journal_form(student_id: int, request: Request, session: Session = Depen
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
 
-    tutor = session.get(Tutor, student.tutor_id)
-    if not tutor or (user.user_type == "tutor" and tutor.id != user.tutor_id):
-        raise HTTPException(status_code=403, detail="Not authorized")
+    # Admins can see all tutors they manage
+    if user.user_type == "admin":
+        tutors = session.exec(select(Tutor).where(Tutor.user_id == user.id)).all()
+    # Tutors can only see themselves
+    else:
+        tutors = session.exec(select(Tutor).where(Tutor.id == user.tutor_id)).all()
 
     return templates.TemplateResponse(
         "journal_add.html",
-        {"request": request, "student": student, "today": date.today().isoformat()}
+        {"request": request, "student": student, "today": date.today().isoformat(), "tutors": tutors}
     )
 
 
 @app.post("/student/{student_id}/journal/add")
 def add_journal(student_id: int,
-                tutor_name: str = Form(...),
+                tutor_id: int = Form(...),
                 subject: str = Form(...),
                 journal: str = Form(...),
                 remarks: str = Form(...),
@@ -1063,8 +1156,13 @@ def add_journal(student_id: int,
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
 
-    tutor = session.get(Tutor, student.tutor_id)
-    if not tutor or (user.user_type == "tutor" and tutor.id != user.tutor_id):
+    # Fetch the Tutor object using the provided tutor_id
+    tutor = session.get(Tutor, tutor_id)
+    if not tutor:
+        raise HTTPException(status_code=404, detail="Tutor not found")
+
+    # Check if the user is authorized to add a journal for the selected tutor
+    if user.user_type == "tutor" and tutor.id != user.tutor_id:
         raise HTTPException(status_code=403, detail="Not authorized")
 
     try:
@@ -1074,7 +1172,7 @@ def add_journal(student_id: int,
 
     journal_entry = Journal(
         student_id=student_id,
-        tutor_name=tutor_name,
+        tutor_name=tutor.name,  # Pass the correct name here
         subject=subject,
         journal=journal,
         remarks=remarks,
@@ -1083,6 +1181,88 @@ def add_journal(student_id: int,
     session.add(journal_entry)
     session.commit()
     return RedirectResponse(f"/student/{student_id}/journal", status_code=303)
+
+
+# ---------- Edit Journal Route ----------
+@app.get("/journal/{journal_id}/edit", response_class=HTMLResponse)
+def edit_journal_form(journal_id: int, request: Request, session: Session = Depends(get_session),
+                      user: User = Depends(get_current_user)):
+    journal = session.get(Journal, journal_id)
+    if not journal:
+        raise HTTPException(status_code=404, detail="Journal entry not found")
+
+    student = session.get(Student, journal.student_id)
+    tutor = session.get(Tutor, student.tutor_id)
+    if not student or not tutor or (user.user_type == "tutor" and tutor.id != user.tutor_id):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    # Admins can see all tutors they manage
+    if user.user_type == "admin":
+        tutors = session.exec(select(Tutor).where(Tutor.user_id == user.id)).all()
+    # Tutors can only see themselves
+    else:
+        tutors = session.exec(select(Tutor).where(Tutor.id == user.tutor_id)).all()
+
+    return templates.TemplateResponse(
+        "journal_edit.html",
+        {
+            "request": request,
+            "journal": journal,
+            "student": student,
+            "tutors": tutors
+        }
+    )
+
+
+@app.post("/journal/{journal_id}/edit")
+def edit_journal(journal_id: int,
+                 tutor_id: int = Form(...),
+                 subject: str = Form(...),
+                 journal: str = Form(...),
+                 remarks: str = Form(...),
+                 entry_date: str = Form(...),
+                 session: Session = Depends(get_session),
+                 user: User = Depends(get_current_user)):
+    journal_entry = session.get(Journal, journal_id)
+    if not journal_entry:
+        raise HTTPException(status_code=404, detail="Journal entry not found")
+
+    student = session.get(Student, journal_entry.student_id)
+    tutor = session.get(Tutor, student.tutor_id)
+    if not student or not tutor or (user.user_type == "tutor" and tutor.id != user.tutor_id):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    selected_tutor = session.get(Tutor, tutor_id)
+    if not selected_tutor:
+        raise HTTPException(status_code=404, detail="Tutor not found")
+
+    journal_entry.tutor_name = selected_tutor.name
+    journal_entry.subject = subject
+    journal_entry.journal = journal
+    journal_entry.remarks = remarks
+    journal_entry.entry_date = datetime.strptime(entry_date, "%Y-%m-%d").date()
+
+    session.add(journal_entry)
+    session.commit()
+    return RedirectResponse(f"/student/{journal_entry.student_id}/journal", status_code=303)
+
+
+# ---------- Delete Journal Route ----------
+@app.post("/journal/{journal_id}/delete")
+def delete_journal(journal_id: int, request: Request, session: Session = Depends(get_session),
+                   user: User = Depends(get_current_user)):
+    journal = session.get(Journal, journal_id)
+    if not journal:
+        raise HTTPException(status_code=404, detail="Journal entry not found")
+
+    student = session.get(Student, journal.student_id)
+    tutor = session.get(Tutor, student.tutor_id)
+    if not student or not tutor or (user.user_type == "tutor" and tutor.id != user.tutor_id):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    session.delete(journal)
+    session.commit()
+    return RedirectResponse(f"/student/{journal.student_id}/journal", status_code=303)
 
 
 # ---------------- Attendance ----------------
