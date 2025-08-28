@@ -14,9 +14,13 @@
         </div>
 
         <div class="mb-3">
-    <label for="turtor_name" class="form-label">Tutor</label>
-    <textarea id="turtor_name" name="tutor_name" class="form-control" rows="4" required></textarea>
-</div>
+            <label for="tutor_id" class="form-label">Tutor</label>
+            <select id="tutor_id" name="tutor_id" class="form-select" required>
+                {% for tutor in tutors %}
+                <option value="{{ tutor.id }}">{{ tutor.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
         <div class="mb-3">
             <label for="subject" class="form-label">Subject</label>
@@ -24,18 +28,16 @@
         </div>
 
         <div class="mb-3">
-    <label for="journal" class="form-label">Journal/Dairy</label>
-    <textarea id="journal" name="journal" class="form-control" rows="4" required></textarea>
-</div>
-
-<div class="mb-3">
-            <label for="remarks" class="form-label">Remarks</label>
-            <input type="text" id="remarks" name="remarks" class="form-control" required>
+            <label for="journal" class="form-label">Journal/Dairy</label>
+            <textarea id="journal" name="journal" class="form-control" rows="4" required></textarea>
         </div>
 
+        <div class="mb-3">
+            <label for="remarks" class="form-label">Remarks</label>
+            <textarea id="remarks" name="remarks" class="form-control" rows="4" required></textarea>
+        </div>
 
-        <button type="submit" class="btn btn-primary">Save Journal</button>
-        <a href="/student/{{ student.id }}/journal" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Add Journal Entry</button>
     </form>
 </div>
 </body>
