@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Questions - {{ student.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #6C63FF;
+            --primary-light: #837dff;
+            --primary-dark: #554fd8;
+            --secondary-color: #8E7CFF;
+            --text-color: #2D3748;
+            --text-light: #718096;
+            --light-bg: #F7FAFC;
+            --card-bg: #ffffff;
+            --border-color: #E2E8F0;
+            --success-color: #48BB78;
+            --warning-color: #ECC94B;
+            --danger-color: #F56565;
+            --info-color: #4299E1;
+        }
+
+        .dark-mode {
+            --primary-color: #8E7CFF;
+            --primary-light: #a59dff;
+            --primary-dark: #6C63FF;
+            --secondary-color: #9c8cff;
+            --text-color: #E2E8F0;
+            --text-light: #A0AEC0;
+            --light-bg: #1A202C;
+            --card-bg: #2D3748;
+            --border-color: #4A5568;
+            --success-color: #68D391;
+            --warning-color: #F6E05E;
+            --danger-color: #FC8181;
+            --info-color: #63B3ED;
+        }
+
+        /* Enhanced Animated Gradient Background */
+        body {
+            background: linear-gradient(-45deg, #6C63FF, #FF6B6B, #4ECDC4, #FFE66D, #6C63FF);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            padding: 2rem;
+        }
+
+        /* Animated gradient effect */
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Floating shapes animation */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 25%);
+            animation: float 20s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            33% {
+                transform: translateY(-20px) rotate(3deg);
+            }
+            66% {
+                transform: translateY(20px) rotate(-3deg);
+            }
+        }
+
+        /* Subtle particle effect */
+        body::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 90px 40px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 160px 120px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 300px 60px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 250px 180px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 380px 140px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 450px 80px, rgba(255,255,255,0.2), transparent);
+            background-repeat: repeat;
+            background-size: 500px 500px;
+            animation: particles 15s linear infinite;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        @keyframes particles {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 500px 500px;
+            }
+        }
+
+        /* For dark mode compatibility */
+        .dark-mode body {
+            background: linear-gradient(-45deg, #1a202c, #2d3748, #4a5568, #6C63FF, #1a202c);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        .dark-mode body::before {
+            background:
+                radial-gradient(circle at 10% 20%, rgba(0, 0, 0, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 0, 0, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 50% 30%, rgba(0, 0, 0, 0.05) 0%, transparent 25%);
+        }
+
+        .dark-mode body::after {
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, rgba(0,0,0,0.3), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(0,0,0,0.2), transparent),
+                radial-gradient(2px 2px at 90px 40px, rgba(0,0,0,0.3), transparent),
+                radial-gradient(2px 2px at 160px 120px, rgba(0,0,0,0.2), transparent),
+                radial-gradient(2px 2px at 300px 60px, rgba(0,0,0,0.3), transparent),
+                radial-gradient(2px 2px at 250px 180px, rgba(0,0,0,0.2), transparent),
+                radial-gradient(2px 2px at 380px 140px, rgba(0,0,0,0.3), transparent),
+                radial-gradient(2px 2px at 450px 80px, rgba(0,0,0,0.2), transparent);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Container */
+        .container {
+            margin-top: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+        }
+
+        .header-title {
+            font-weight: 600;
+            font-size: 1.75rem;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+            background-color: var(--card-bg);
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Form Elements */
+        .form-label {
+            font-weight: 500;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(108, 99, 255, 0.25);
+        }
+
+        /* Buttons */
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .question-type-button {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+        }
+
+        .question-type-button.active {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(108, 99, 255, 0.3);
+        }
+
+        /* Loading Indicator */
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+
+        .dark-mode .loading-indicator {
+            background-color: rgba(45, 55, 72, 0.8);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .header-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .question-type-buttons {
+                flex-direction: column;
+            }
+
+            .question-type-button {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Theme Toggle Button -->
+<div class="theme-toggle" id="themeToggle">
+    <i class="fas fa-moon"></i>
+</div>
+
+<div class="container">
+    <!-- Header Section -->
+    <div class="header-section animate-fadeIn">
+        <h1 class="header-title">Generate Test Questions</h1>
+        <a href="/student/{{ student.id }}/tests" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Tests
+        </a>
+    </div>
+
+    <!-- Student Info -->
+    <div class="card mb-4 animate-fadeIn">
+        <div class="card-body">
+            <h5 class="card-title text-primary mb-1"><i class="fas fa-user-graduate me-2"></i>Student Information</h5>
+            <p class="mb-0">Name: <strong>{{ student.name }}</strong> | Grade: <strong>{{ student.grade }}</strong></p>
+        </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card animate-fadeIn">
+        <div class="card-body">
+            <h5 class="card-title text-primary mb-4">
+                <i class="fas fa-question-circle me-2"></i>Select Question Type
+            </h5>
+
+            <div class="d-flex flex-wrap gap-2 mb-4 question-type-buttons">
+                <button class="btn btn-outline-primary question-type-button active" data-question-type="syllabus" id="syllabusButton">
+                    <i class="fas fa-book me-2"></i>Based on Student Syllabus
+                </button>
+                <button class="btn btn-outline-primary question-type-button" data-question-type="performance" id="performanceButton">
+                    <i class="fas fa-chart-line me-2"></i>Based on Student Performance
+                </button>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="form-section" id="questionsForm">
+                <form id="questionGenerationForm" action="/student/{{ student.id }}/generate-questions" method="post">
+                    <input type="hidden" name="question_type" id="questionTypeInput" value="syllabus">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="subject" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="subject" name="subject" placeholder="e.g., Mathematics, Science" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="totalMarks" class="form-label">Total Marks</label>
+                            <input type="number" class="form-control" id="totalMarks" name="totalMarks" placeholder="e.g., 100" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="topics" class="form-label">Topics</label>
+                        <textarea class="form-control" id="topics" name="topics" rows="3" placeholder="Enter topics separated by commas" required></textarea>
+                        <div class="form-text">Separate multiple topics with commas</div>
+                    </div>
+
+                    <h6 class="mt-4 mb-3 text-primary">Question Distribution</h6>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="mcqCount" class="form-label">MCQ Questions</label>
+                            <input type="number" class="form-control" id="mcqCount" name="mcqCount" min="0" value="0" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="shortAnswerCount" class="form-label">Short Answer Questions</label>
+                            <input type="number" class="form-control" id="shortAnswerCount" name="shortAnswerCount" min="0" value="0" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="longAnswerCount" class="form-label">Long Answer Questions</label>
+                            <input type="number" class="form-control" id="longAnswerCount" name="longAnswerCount" min="0" value="0" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success mt-3">
+                        <i class="fas fa-magic me-2"></i> Generate Questions
+                    </button>
+                </form>
+            </div>
+
+            <div id="loadingIndicator" class="loading-indicator">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 mb-0">Generating questions. Please wait...</p>
+            </div>
+
+            <div id="generatedQuestionsDisplay" class="mt-4"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Theme toggle functionality
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = themeToggle.querySelector('i');
+
+    // Check for saved theme preference or respect OS preference
+    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const currentTheme = localStorage.getItem('theme');
+
+    if (currentTheme === 'dark' || (!currentTheme && prefersDarkScheme.matches)) {
+        document.body.classList.add('dark-mode');
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+    }
+
+    themeToggle.addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+
+        if (document.body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeIcon.classList.remove('fa-sun');
+            themeIcon.classList.add('fa-moon');
+        }
+    });
+
+    // Set initial question type
+    document.getElementById('questionTypeInput').value = 'syllabus';
+
+    // Question type button functionality
+    document.querySelectorAll('.question-type-button').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const questionType = this.getAttribute('data-question-type');
+
+            // Remove active class from all buttons
+            document.querySelectorAll('.question-type-button').forEach(btn => {
+                btn.classList.remove('active', 'btn-primary');
+                btn.classList.add('btn-outline-primary');
+            });
+
+            // Add active class to clicked button
+            this.classList.add('active', 'btn-primary');
+            this.classList.remove('btn-outline-primary');
+
+            // Set the value of the hidden input
+            document.getElementById('questionTypeInput').value = questionType;
+
+            // Show the form if it's hidden
+            document.getElementById('questionsForm').style.display = 'block';
+        });
+    });
+
+    // Form submission handler
+    document.getElementById('questionGenerationForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        // Show loading indicator and clear previous content
+        document.getElementById('loadingIndicator').style.display = 'block';
+        document.getElementById('generatedQuestionsDisplay').innerHTML = '';
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const url = form.action;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+
+            // Hide the loading indicator
+            document.getElementById('loadingIndicator').style.display = 'none';
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                document.getElementById('generatedQuestionsDisplay').innerHTML = `
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Error: ${errorText}
+                    </div>`;
+                return;
+            }
+
+            const htmlContent = await response.text();
+            document.getElementById('generatedQuestionsDisplay').innerHTML = htmlContent;
+
+        } catch (error) {
+            // Hide the loading indicator on error
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('generatedQuestionsDisplay').innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    An unexpected error occurred: ${error.message}
+                </div>`;
+        }
+    });
+</script>
+
+</body>
+</html>
