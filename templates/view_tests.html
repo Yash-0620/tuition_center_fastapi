@@ -9,7 +9,10 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3>Tests — {{ student.name }}</h3>
-        <a href="/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+        <div class="d-flex gap-2">
+            <a href="/student/{{ student.id }}/generate-questions" class="btn btn-primary">Generate Questions</a>
+            <a href="/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
     </div>
 
     <!-- Add Test Form -->
