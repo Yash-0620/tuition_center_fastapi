@@ -9,13 +9,11 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import func
 from sqlmodel import SQLModel, create_engine, Session, select
 from starlette.responses import RedirectResponse
-import json
 
-from init_db import init_db
 from models import Student, Journal, Attendance, TestRecord, User, Tutor, UpcomingTest, Feedback
 from db import engine  # shared engine
-from init_db import init_db
 from ai_feedback import router as ai_feedback_router, init_templates
+from ai_questions import router as ai_questions_router, init_templates as init_questions_templates
 from fastapi.staticfiles import StaticFiles
 import os
 import secrets
@@ -46,6 +44,8 @@ app.state.templates = templates
 # Pass templates to subrouter & include AI Feedback router
 init_templates(templates)
 app.include_router(ai_feedback_router)
+init_questions_templates(templates)
+app.include_router(ai_questions_router)
 
 
 def get_session():
